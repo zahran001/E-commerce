@@ -1,7 +1,6 @@
 ﻿using E_commerce.Services.CouponAPI.Data;
-using E_commerce.Services.CouponAPI.Dto;
 using E_commerce.Services.CouponAPI.Models;
-using Microsoft.AspNetCore.Http;
+using E_commerce.Services.CouponAPI.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_commerce.Services.CouponAPI.Controllers
@@ -64,3 +63,6 @@ namespace E_commerce.Services.CouponAPI.Controllers
 }
 // Architecture for the API response: Whenever multiple APIs are being consumed, the response will be in one object format.
 // We want to have a common response for all the endpoints.
+
+// We have added dtos in the project. We should not return Coupon or the data object itself - we should return the dto.
+// We might have to do a manual conversion.
