@@ -34,7 +34,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
             try
             {
                 IEnumerable<Coupon> objList = _db.Coupons.ToList();
-                _response.Result = objList;
+                _response.Result = _mapper.Map<IEnumerable<CouponDto>>(objList);
             }
             catch (Exception ex)
             {
@@ -53,14 +53,8 @@ namespace E_commerce.Services.CouponAPI.Controllers
             try
             {
                 Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
-                CouponDto couponDto = new CouponDto()
-                {
-                    CouponId = obj.CouponId,
-                    CouponCode = obj.CouponCode,
-                    DiscountAmount = obj.DiscountAmount,
-                    MinimumAmount = obj.MinimumAmount,
-                };
-                _response.Result = couponDto;
+                _response.Result = _mapper.Map<CouponDto>(obj);
+
             }
             catch (Exception ex)
             {
