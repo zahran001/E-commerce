@@ -22,3 +22,6 @@ namespace E_commerce.Services.CouponAPI
 }
 // AutoMapper - as long as the property names are exactly the same, it will automatically map the properties.
 // We have to register the mapping in the service collection in the startup class.
+
+// AutoMapper only maps the properties that exist in the destination type.
+// Any extra properties in the source model that do not have a corresponding match in the destination DTO will simply be ignored.

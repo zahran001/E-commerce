@@ -28,6 +28,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
             _mapper = mapper;
         }
 
+        // get all coupons
         [HttpGet]
         public ResponseDto Get()
         {
@@ -54,6 +55,104 @@ namespace E_commerce.Services.CouponAPI.Controllers
             {
                 Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
                 _response.Result = _mapper.Map<CouponDto>(obj);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
+        // get coupon by code
+        [HttpGet]
+        [Route("GetByCode/{code}")]
+        public ResponseDto GetByCode(string code)
+        {
+            try
+            {
+                Coupon obj = _db.Coupons.FirstOrDefault(u => u.CouponCode.ToLower() == code.ToLower());
+                if (obj == null)
+                {
+                    _response.IsSuccess = false;
+                }
+                _response.Result = _mapper.Map<CouponDto>(obj);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
+
+        // create a new coupon
+        [HttpPost]
+        public ResponseDto Post([FromBody] CouponDto couponDto)
+        {
+            // convert couponDto to Coupon to add to _db (database)
+
+            try
+            {
+                // DestinationType destinationObject = _mapper.Map<DestinationType>(sourceObject);
+                Coupon obj = _mapper.Map<Coupon>(couponDto);
+                _db.Coupons.Add(obj);
+                _db.SaveChanges();
+
+                // return the couponDto
+                _response.Result = _mapper.Map<CouponDto>(obj);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+        // Testing
+        // When the CouponId is set to 0, Entity Framework treats it as a new entity and assigns a new value to the primary key when the entity is saved to the database.
+
+        // update a coupon
+        [HttpPut]
+        public ResponseDto Put([FromBody] CouponDto couponDto)
+        {
+            // convert couponDto to Coupon to add to _db (database)
+
+            try
+            {
+                // DestinationType destinationObject = _mapper.Map<DestinationType>(sourceObject);
+                Coupon obj = _mapper.Map<Coupon>(couponDto);
+                _db.Coupons.Update(obj); // EF Core - based on the id the obj, it will update the record
+                _db.SaveChanges();
+
+                // return the couponDto
+                _response.Result = _mapper.Map<CouponDto>(obj);
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
+
+        // delte a coupon
+        [HttpDelete]
+        public ResponseDto Delete(int id)
+        {
+
+            try
+            {
+                // retrieve that coupon
+                Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
+                _db.Coupons.Remove(obj) ;
+                _db.SaveChanges();
 
             }
             catch (Exception ex)
