@@ -1,3 +1,5 @@
+using AutoMapper;
+using E_commerce.Services.CouponAPI;
 using E_commerce.Services.CouponAPI.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +11,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// create a mapper
+IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
+// add the mapper to the service
+builder.Services.AddSingleton(mapper);
+// we want to use AutoMapper using dependency injection
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

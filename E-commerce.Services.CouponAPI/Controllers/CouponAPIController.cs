@@ -1,4 +1,5 @@
-﻿using E_commerce.Services.CouponAPI.Data;
+﻿using AutoMapper;
+using E_commerce.Services.CouponAPI.Data;
 using E_commerce.Services.CouponAPI.Models;
 using E_commerce.Services.CouponAPI.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -12,16 +13,19 @@ namespace E_commerce.Services.CouponAPI.Controllers
         // retrieve all coupons
         // In order to retrieve the records, we will be using EF Core, so we need ApplicationDbContext using DI.
         private readonly ApplicationDbContext _db;
-        //return ResponseDto in the controller
+        // return ResponseDto in the controller
         private ResponseDto _response;
+        // inject AutoMapper in the controller
+        private IMapper _mapper;
 
         
 
         // Constructor
-        public CouponAPIController(ApplicationDbContext db)
+        public CouponAPIController(ApplicationDbContext db, IMapper mapper)
         {
             _db = db;
-            _response = new ResponseDto(); // initialize
+            _response = new ResponseDto();
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -49,7 +53,14 @@ namespace E_commerce.Services.CouponAPI.Controllers
             try
             {
                 Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
-                _response.Result = obj;
+                CouponDto couponDto = new CouponDto()
+                {
+                    CouponId = obj.CouponId,
+                    CouponCode = obj.CouponCode,
+                    DiscountAmount = obj.DiscountAmount,
+                    MinimumAmount = obj.MinimumAmount,
+                };
+                _response.Result = couponDto;
             }
             catch (Exception ex)
             {
@@ -65,4 +76,4 @@ namespace E_commerce.Services.CouponAPI.Controllers
 // We want to have a common response for all the endpoints.
 
 // We have added dtos in the project. We should not return Coupon or the data object itself - we should return the dto.
-// We might have to do a manual conversion.
+// To avoid a manual conversion - we can use AutoMapper for this.
