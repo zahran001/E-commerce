@@ -89,6 +89,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         }
 
 
+        // Passing the object in the request body
         // create a new coupon
         [HttpPost]
         public ResponseDto Post([FromBody] CouponDto couponDto)
@@ -141,7 +142,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
             return _response;
         }
 
-
+        
         // delte a coupon
         [HttpDelete]
         public ResponseDto Delete(int id)
@@ -162,6 +163,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
             }
             return _response;
         }
+        // Passing the ID in the URL
 
     }
 }
