@@ -143,7 +143,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         }
 
         
-        // delte a coupon
+        // delete a coupon
         [HttpDelete]
         public ResponseDto Delete(int id)
         {
