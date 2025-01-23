@@ -10,6 +10,7 @@ namespace E_commerce.Web.Service
 
     public class BaseService : IBaseService
     {
+        // To make API calls, we need an HttpClient object. We can create an HttpClient object using the IHttpClientFactory service.
         private readonly IHttpClientFactory _httpClientFactory;
         public BaseService(IHttpClientFactory httpClientFactory)
         {

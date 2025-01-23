@@ -60,4 +60,3 @@ void ApplyMigration()
     }
 }
 // SQL Server Management Studio (SSMS)
-// 11555
