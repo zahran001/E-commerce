@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Text;
 using static E_commerce.Web.Utility.StaticDetails;
+using static System.Net.WebRequestMethods;
 
 namespace E_commerce.Web.Service
 {
@@ -31,6 +32,7 @@ namespace E_commerce.Web.Service
             if (requestDto.Data != null)
             {
                 message.Content = new StringContent(JsonConvert.SerializeObject(requestDto.Data), Encoding.UTF8, "application/json");
+                // prepares the HTTP request message to send the JSON data to the specified URL
             }
 
             HttpResponseMessage? apiResponse = null;
