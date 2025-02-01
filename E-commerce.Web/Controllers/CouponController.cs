@@ -89,3 +89,11 @@ namespace E_commerce.Web.Controllers
 
     }
 }
+
+/*
+ * Debugging the delete endpoint:
+ * Used Breakpoint in the BaseService.
+ * Method Not Allowed 
+ * Didn't have the id in the route in CouponAPIController.
+ * 
+ */

@@ -76,6 +76,7 @@ namespace E_commerce.Web.Service
                         return new() { IsSuccess = false, Message = "Internal Server Error" };
                     default:
                         var apiContent = await apiResponse.Content.ReadAsStringAsync(); // retrieve the content from apiResponse
+                        
                         var apiResponseDto = JsonConvert.DeserializeObject<ResponseDto>(apiContent); // deserialize the content to ResponseDto
                         return apiResponseDto; // return the deserialized object
                 }

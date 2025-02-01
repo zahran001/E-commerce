@@ -18,7 +18,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         // inject AutoMapper in the controller
         private IMapper _mapper;
 
-        
+
 
         // Constructor
         public CouponAPIController(ApplicationDbContext db, IMapper mapper)
@@ -53,7 +53,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
+                Coupon obj = _db.Coupons.First(u => u.CouponId == id);
                 _response.Result = _mapper.Map<CouponDto>(obj);
 
             }
@@ -142,9 +142,10 @@ namespace E_commerce.Services.CouponAPI.Controllers
             return _response;
         }
 
-        
+
         // delete a coupon
         [HttpDelete]
+        [Route("{id:int}")]
         public ResponseDto Delete(int id)
         {
 
