@@ -32,6 +32,10 @@ namespace E_commerce.Web.Controllers
 
                 list = JsonConvert.DeserializeObject<List<CouponDto>>(Convert.ToString(response.Result));
             }
+            else
+            {
+                TempData["error"] = response?.Message; // null check
+            }
             return View(list);	
 		}
 		// In CouponAPIController, the route is "api/coupon"
@@ -52,9 +56,14 @@ namespace E_commerce.Web.Controllers
 
                 if (response != null && response.IsSuccess)
                 {
-                    return RedirectToAction(nameof(CouponIndex));
+					TempData["success"] = "New Coupon Created";
+					return RedirectToAction(nameof(CouponIndex));
                 }
-     
+                else
+                {
+                    TempData["error"] = response?.Message; // null check
+                }
+
             }
             return View(model);
         }
@@ -69,8 +78,11 @@ namespace E_commerce.Web.Controllers
 				CouponDto? model = JsonConvert.DeserializeObject<CouponDto>(Convert.ToString(response.Result));
 				return View(model);
 			}
-
-			return NotFound();
+            else
+            {
+                TempData["error"] = response?.Message; // null check
+            }
+            return NotFound();
 		}
 
 
@@ -81,19 +93,23 @@ namespace E_commerce.Web.Controllers
 
             if (response != null && response.IsSuccess)
             {
-                return RedirectToAction(nameof(CouponIndex));
+                TempData["success"] = "Coupon Deleted";
+				return RedirectToAction(nameof(CouponIndex));
+            }
+            else
+            {
+                TempData["error"] = response?.Message; // null check
             }
 
-            return NotFound();
+            return View(couponDto);
         }
 
     }
 }
 
 /*
- * Debugging the delete endpoint:
- * Used Breakpoint in the BaseService.
- * Method Not Allowed 
- * Didn't have the id in the route in CouponAPIController.
- * 
- */
+* Debugging the delete endpoint:
+* Used Breakpoint in the BaseService.
+* Method Not Allowed 
+* Didn't have the id in the route in CouponAPIController.
+*/
