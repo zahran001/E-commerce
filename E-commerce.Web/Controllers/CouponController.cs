@@ -2,6 +2,7 @@
 using E_commerce.Web.Service;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace E_commerce.Web.Controllers
     // Web Project -> MVC controller -> CouponController
@@ -39,5 +40,52 @@ namespace E_commerce.Web.Controllers
         {
             return View();
         }
-	} 
+        // In ASP.NET MVC (and ASP.NET Core), action methods are treated as GET requests by default.
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCoupon(CouponDto model)
+        {
+            // server-side validation
+            if (ModelState.IsValid)
+            {
+                ResponseDto? response = await _couponService.CreateCouponAsync(model);
+
+                if (response != null && response.IsSuccess)
+                {
+                    return RedirectToAction(nameof(CouponIndex));
+                }
+     
+            }
+            return View(model);
+        }
+
+		// This method retrieves the coupon by its ID and displays the delete confirmation view.
+		public async Task<IActionResult> DeleteCoupon(int couponId)
+		{
+			ResponseDto? response = await _couponService.GetCouponByIdAsync(couponId);
+
+			if (response != null && response.IsSuccess)
+			{
+				CouponDto? model = JsonConvert.DeserializeObject<CouponDto>(Convert.ToString(response.Result));
+				return View(model);
+			}
+
+			return NotFound();
+		}
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteCoupon(CouponDto couponDto)
+        {
+            ResponseDto? response = await _couponService.DeleteCouponAsync(couponDto.CouponId);
+
+            if (response != null && response.IsSuccess)
+            {
+                return RedirectToAction(nameof(CouponIndex));
+            }
+
+            return NotFound();
+        }
+
+    }
 }
