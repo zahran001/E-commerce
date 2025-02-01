@@ -31,7 +31,8 @@ namespace E_commerce.Web.Controllers
 
                 list = JsonConvert.DeserializeObject<List<CouponDto>>(Convert.ToString(response.Result));
             }
-            return View(list);
-        }
-    }
+            return View(list);	
+		}
+		// In CouponAPIController, the route is "api/coupon"
+	} 
 }
