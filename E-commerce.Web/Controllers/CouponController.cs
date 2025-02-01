@@ -34,5 +34,10 @@ namespace E_commerce.Web.Controllers
             return View(list);	
 		}
 		// In CouponAPIController, the route is "api/coupon"
+
+        public async Task<IActionResult> CreateCoupon()
+        {
+            return View();
+        }
 	} 
 }
