@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using E_commerce.Services.AuthAPI.Models.Dto;
+using E_commerce.Services.AuthAPI.Service.IService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_commerce.Services.AuthAPI.Controllers
@@ -7,10 +9,29 @@ namespace E_commerce.Services.AuthAPI.Controllers
 	[ApiController]
 	public class AuthAPIController : ControllerBase
 	{
-		[HttpPost("register")]
-		public async Task<IActionResult> Register()
+		// inject the AuthService
+		private readonly IAuthService _authService;
+		// add the ResponseDto
+		protected ResponseDto _response; // not accessible outside of the AuthAPIController class hierarchy
+		public AuthAPIController(IAuthService authService)
 		{
-			return Ok();
+			_authService = authService;
+			_response = new();
+		}
+
+
+		[HttpPost("register")]
+		public async Task<IActionResult> Register([FromBody] RegistrationRequestDto model)
+		{
+			var errorMessage = await _authService.Register(model);
+			if (!string.IsNullOrEmpty(errorMessage))
+			{
+				_response.IsSuccess = false;
+				_response.Message = errorMessage;
+				return BadRequest(_response);
+			}
+
+			return Ok(_response);
 		}
 
 		[HttpPost("login")]
