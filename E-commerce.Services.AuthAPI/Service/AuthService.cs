@@ -23,9 +23,41 @@ namespace E_commerce.Services.AuthAPI.Service
 			_roleManager = roleManager;
 		}
 
-		public Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
+		public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
 		{
-			throw new NotImplementedException();
+			// We will get the username and password based on the LoginRequestDto
+
+			// retrieve the user from database
+			var user = _db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower()==loginRequestDto.UserName.ToLower());
+
+			bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+
+			if(user==null || !isValid)
+			{
+				return new LoginResponseDto() { User = null, Token = "" };
+			}
+
+			/* Generate the JWT token if the user was found */
+
+			// populate userDto based on the user
+			UserDto userDto = new()
+			{
+				Email = user.Email,
+				ID = user.Id,
+				FirstName = user.FirstName,
+				LastName = user.LastName,
+				PhoneNumber = user.PhoneNumber
+			};
+
+			LoginResponseDto loginResponseDto = new LoginResponseDto()
+			{
+				User = userDto,
+				Token = ""
+			};
+
+			return loginResponseDto;
+
+
 		}
 
 		public async Task<string> Register(RegistrationRequestDto registrationRequestDto)
