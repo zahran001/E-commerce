@@ -13,14 +13,16 @@ namespace E_commerce.Services.AuthAPI.Service
 
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly RoleManager<IdentityRole> _roleManager;
+		private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
 		// Inject helper methods
-		public AuthService(ApplicationDbContext db,
-			UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+		public AuthService(ApplicationDbContext db, UserManager<ApplicationUser> userManager, 
+			RoleManager<IdentityRole> roleManager, IJwtTokenGenerator jwtTokenGenerator)
 		{
 			_db = db;
 			_userManager = userManager;
 			_roleManager = roleManager;
+			_jwtTokenGenerator = jwtTokenGenerator;
 		}
 
 		public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
@@ -38,8 +40,8 @@ namespace E_commerce.Services.AuthAPI.Service
 			}
 
 			/* Generate the JWT token if the user was found */
+			var token = _jwtTokenGenerator.GenerateToken(user);
 
-			// populate userDto based on the user
 			UserDto userDto = new()
 			{
 				Email = user.Email,
@@ -52,7 +54,7 @@ namespace E_commerce.Services.AuthAPI.Service
 			LoginResponseDto loginResponseDto = new LoginResponseDto()
 			{
 				User = userDto,
-				Token = ""
+				Token = token
 			};
 
 			return loginResponseDto;
