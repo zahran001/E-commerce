@@ -49,5 +49,21 @@ namespace E_commerce.Services.AuthAPI.Controllers
 			_response.Result = loginResponse;
 			return Ok(_response);
 		}
+
+		[HttpPost("AssignRole")]
+		public async Task<IActionResult> AssignRole([FromBody] RegistrationRequestDto model)
+		{
+			var AssignRoleIsSuccessful = await _authService.AssignRole(model.Email, model.Role.ToUpper());
+			if (!AssignRoleIsSuccessful)
+			{
+				_response.IsSuccess = false;
+				_response.Message = "Error configuring user role";
+				return BadRequest(_response);
+			}
+
+			// if login is successful
+			_response.Result = AssignRoleIsSuccessful;
+			return Ok(_response);
+		}
 	}
 }
