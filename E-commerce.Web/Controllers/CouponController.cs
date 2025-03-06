@@ -1,11 +1,11 @@
 ﻿using E_commerce.Web.Models;
-using E_commerce.Web.Service;
+using E_commerce.Web.Service.IService;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace E_commerce.Web.Controllers
-    // Web Project -> MVC controller -> CouponController
+// Web Project -> MVC controller -> CouponController
 {
     public class CouponController : Controller
     {

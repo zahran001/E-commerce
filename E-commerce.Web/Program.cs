@@ -10,12 +10,14 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService, CouponService>();
-
+builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddScoped<IBaseService, BaseService>(); //  register services with a scoped lifetime -  a new instance of the service will be created for each HTTP request
 builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Register the CouponService
 StaticDetails.CouponApiBase = builder.Configuration["ServiceUrls:CouponAPI"];
+StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthAPI"];
 
 var app = builder.Build();
 
