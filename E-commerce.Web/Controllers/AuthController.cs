@@ -3,6 +3,7 @@ using E_commerce.Web.Service.IService;
 using E_commerce.Web.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 
 namespace E_commerce.Web.Controllers
 {
@@ -20,6 +21,29 @@ namespace E_commerce.Web.Controllers
 			LoginRequestDto loginRequestDto = new();
 			return View(loginRequestDto);
 		}
+
+		
+		[HttpPost]
+		public async Task<IActionResult> Login(LoginRequestDto obj)
+		{
+			// Invoke the authService when this obj is retrieved
+			ResponseDto responseDto = await _authService.LoginAsync(obj);
+
+			// If it's successful, deserialize that 
+
+			if (responseDto != null && responseDto.IsSuccess)
+			{
+				LoginResponseDto loginResponseDto = JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(responseDto.Result));
+				return RedirectToAction("Index", "Home");
+			}
+			else
+			{
+				ModelState.AddModelError("CustomError", responseDto.Message);
+				return View(obj);
+			}
+
+		}
+		
 
 		[HttpGet]
 		public IActionResult Register()

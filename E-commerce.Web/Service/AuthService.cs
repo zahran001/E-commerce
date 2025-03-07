@@ -21,7 +21,7 @@ namespace E_commerce.Web.Service
 			});
 		}
 
-		public async Task<ResponseDto?> LoginAsync(LoginResponseDto loginRequestDto)
+		public async Task<ResponseDto?> LoginAsync(LoginRequestDto loginRequestDto)
 		{
 			return await _baseService.SendAsync(new RequestDto()
 			{
