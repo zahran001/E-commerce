@@ -1,18 +1,24 @@
 ﻿using E_commerce.Web.Models;
 using E_commerce.Web.Service.IService;
 using E_commerce.Web.Utility;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace E_commerce.Web.Controllers
 {
 	public class AuthController : Controller
 	{
 		private readonly IAuthService _authService;
-		public AuthController(IAuthService authService)
+		private readonly ITokenProvider _tokenProvider;
+		public AuthController(IAuthService authService, ITokenProvider tokenProvider)
 		{
 			_authService = authService;
+			_tokenProvider = tokenProvider;
 		}
 
 		[HttpGet]
@@ -34,6 +40,9 @@ namespace E_commerce.Web.Controllers
 			if (responseDto != null && responseDto.IsSuccess)
 			{
 				LoginResponseDto loginResponseDto = JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(responseDto.Result));
+
+				await SignInUser(loginResponseDto);
+				_tokenProvider.SetToken(loginResponseDto.Token);
 				return RedirectToAction("Index", "Home");
 			}
 			else
@@ -97,6 +106,31 @@ namespace E_commerce.Web.Controllers
         {
 			return View();
         }
+
+		// Sign in a user using .NET Identity
+		public async Task SignInUser(LoginResponseDto model)
+		{
+			var handler = new JwtSecurityTokenHandler();
+			var jwt = handler.ReadJwtToken(model.Token); // read the token
+			var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
+
+			// Extract and add relevant claims from the token
+			identity.AddClaim(new Claim(JwtRegisteredClaimNames.Email, 
+				jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+
+			identity.AddClaim(new Claim(JwtRegisteredClaimNames.Sub,
+				jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value));
+
+			identity.AddClaim(new Claim(JwtRegisteredClaimNames.Name,
+				jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Name).Value));
+
+			identity.AddClaim(new Claim(ClaimTypes.Name,
+				jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+
+			// Create a ClaimsPrincipal from the extracted claims and sign in the user
+			var principal = new ClaimsPrincipal(identity);
+			await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+		}
 
     }
 }
