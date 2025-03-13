@@ -1,8 +1,17 @@
 using E_commerce.Web.Service;
 using E_commerce.Web.Service.IService;
 using E_commerce.Web.Utility;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+	.AddCookie(options =>
+	{
+		options.ExpireTimeSpan = TimeSpan.FromHours(10);
+		options.LoginPath = "/Auth/Login";  // Set the login path
+		options.AccessDeniedPath = "/Auth/AccessDenied"; // Set the logout path
+	});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -35,6 +44,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();  // Ensure authentication middleware is used
 app.UseAuthorization();
 
 app.MapControllerRoute(

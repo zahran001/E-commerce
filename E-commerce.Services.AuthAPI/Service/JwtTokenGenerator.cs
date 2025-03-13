@@ -15,7 +15,7 @@ namespace E_commerce.Services.AuthAPI.Service
         {
             _jwtOptions = jwtOptions.Value;
         }
-        public string GenerateToken(ApplicationUser applicationUser)
+        public string GenerateToken(ApplicationUser applicationUser, IEnumerable<string> roles)
         {
             // Generate token based on the applicationUser
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -31,8 +31,10 @@ namespace E_commerce.Services.AuthAPI.Service
                 new Claim(JwtRegisteredClaimNames.Name, applicationUser.UserName.ToString())
             };
 
-            // Token Descriptor - configuration properties for the token
-            var tokenDescriptor = new SecurityTokenDescriptor
+            claimList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role))); // add all role claims to the claimList at once
+
+			// Token Descriptor - configuration properties for the token
+			var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Audience = _jwtOptions.Audience,
                 Issuer = _jwtOptions.Issuer,

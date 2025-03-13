@@ -102,9 +102,11 @@ namespace E_commerce.Web.Controllers
 			return View(obj); // The Register view is reloaded with the user's entered details and an intact role selection dropdown
 		}
 
-		public IActionResult Logout()
+		public async Task<IActionResult> Logout()
         {
-			return View();
+			await HttpContext.SignOutAsync();
+			_tokenProvider.ClearToken();
+			return RedirectToAction("Index", "Home");
         }
 
 		// Sign in a user using .NET Identity
