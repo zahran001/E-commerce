@@ -129,6 +129,9 @@ namespace E_commerce.Web.Controllers
 			identity.AddClaim(new Claim(ClaimTypes.Name,
 				jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
 
+			identity.AddClaim(new Claim(ClaimTypes.Role,
+				jwt.Claims.FirstOrDefault(u => u.Type == "role").Value));
+
 			// Create a ClaimsPrincipal from the extracted claims and sign in the user
 			var principal = new ClaimsPrincipal(identity);
 			await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
