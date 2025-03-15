@@ -1,11 +1,14 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
 
 namespace E_commerce.Web.Models
 {
 	public class LoginRequestDto
 	{
-		public string UserName { get; set; }
-		public string Password { get; set; }
+        [Required]
+        public string UserName { get; set; }
+        [Required]
+        public string Password { get; set; }
 	}
 }
 
