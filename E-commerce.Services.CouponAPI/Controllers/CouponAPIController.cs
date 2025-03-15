@@ -2,12 +2,14 @@
 using E_commerce.Services.CouponAPI.Data;
 using E_commerce.Services.CouponAPI.Models;
 using E_commerce.Services.CouponAPI.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_commerce.Services.CouponAPI.Controllers
 {
     [Route("api/coupon")]
     [ApiController]
+    [Authorize]
     public class CouponAPIController : ControllerBase
     {
         // retrieve all coupons
