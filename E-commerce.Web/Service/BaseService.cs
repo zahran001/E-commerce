@@ -12,17 +12,25 @@ namespace E_commerce.Web.Service
     {
         // To make API calls, we need an HttpClient object. We can create an HttpClient object using the IHttpClientFactory service.
         private readonly IHttpClientFactory _httpClientFactory;
-        public BaseService(IHttpClientFactory httpClientFactory)
+        public readonly ITokenProvider _tokenProvider;
+        public BaseService(IHttpClientFactory httpClientFactory, ITokenProvider tokenProvider)
         {
             _httpClientFactory = httpClientFactory;
+            _tokenProvider = tokenProvider;
         }
 
-        public async Task<ResponseDto?> SendAsync(RequestDto requestDto)
+        public async Task<ResponseDto?> SendAsync(RequestDto requestDto, bool withBearer = true)
         {
             HttpClient client = _httpClientFactory.CreateClient("EcommerceAPI");
             HttpRequestMessage message = new();
             message.Headers.Add("Accept", "application/json");
-            // Token will be added here
+            // Token
+            if (withBearer)
+            {
+                // Retrieve the token
+                var token = _tokenProvider.GetToken();
+                message.Headers.Add("Authorization", $"Bearer {token}");
+            }
 
             message.RequestUri = new Uri(requestDto.Url);
             // If this is a GET request, we are done here.
