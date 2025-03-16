@@ -94,6 +94,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         // Passing the object in the request body
         // create a new coupon
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         public ResponseDto Post([FromBody] CouponDto couponDto)
         {
             // convert couponDto to Coupon to add to _db (database)
@@ -121,7 +122,8 @@ namespace E_commerce.Services.CouponAPI.Controllers
 
         // update a coupon
         [HttpPut]
-        public ResponseDto Put([FromBody] CouponDto couponDto)
+		[Authorize(Roles = "ADMIN")]
+		public ResponseDto Put([FromBody] CouponDto couponDto)
         {
             // convert couponDto to Coupon to add to _db (database)
 
@@ -148,7 +150,8 @@ namespace E_commerce.Services.CouponAPI.Controllers
         // delete a coupon
         [HttpDelete]
         [Route("{id:int}")]
-        public ResponseDto Delete(int id)
+		[Authorize(Roles = "ADMIN")]
+		public ResponseDto Delete(int id)
         {
 
             try
