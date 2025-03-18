@@ -48,9 +48,29 @@ namespace E_commerce.Services.ProductAPI.Controllers
             return _response;
         }
 
-        // Passing the object in the request body
-        // create a new Product
-        [HttpPost]
+		// get Product by id
+		[HttpGet]
+        [Route("{id:int}")]
+        public ResponseDto Get(int id)
+        {
+            try
+            {
+                Product obj = _db.Products.First(u => u.ProductId == id);
+                _response.Result = _mapper.Map<ProductDto>(obj);
+            }
+            catch (Exception ex) 
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+
+        }
+
+
+		// Passing the object in the request body
+		// create a new Product
+		[HttpPost]
         [Authorize(Roles = "ADMIN")]
         public ResponseDto Post([FromBody] ProductDto ProductDto)
         {
