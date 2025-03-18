@@ -119,6 +119,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
         }
         // Testing
         // When the CouponId is set to 0, Entity Framework treats it as a new entity and assigns a new value to the primary key when the entity is saved to the database.
+        /* Check out the explanation at the end */
 
         // update a coupon
         [HttpPut]
@@ -178,3 +179,12 @@ namespace E_commerce.Services.CouponAPI.Controllers
 
 // We have added dtos in the project. We should not return Coupon or the data object itself - we should return the dto.
 // To avoid a manual conversion - we can use AutoMapper for this.
+
+
+/*
+[For integer-based primary keys]
+How EF Core Treats CouponId = 0
+In EF Core, when an entity is added using _db.Coupons.Add(obj), EF Core checks the primary key (CouponId):
+    If CouponId = 0 (or null for GUIDs), EF assumes it's a new entity and automatically assigns a new primary key upon saving.
+    If CouponId has a valid value (not 0), EF assumes it's an existing record. 
+*/
