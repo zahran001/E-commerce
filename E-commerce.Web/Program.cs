@@ -18,16 +18,23 @@ builder.Services.AddControllersWithViews();
 // Configure the HTTP client
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<IProductService, ProductService>();
 builder.Services.AddHttpClient<ICouponService, CouponService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
+
+
 builder.Services.AddScoped<IBaseService, BaseService>(); //  register services with a scoped lifetime -  a new instance of the service will be created for each HTTP request
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // Register the CouponService
 StaticDetails.CouponApiBase = builder.Configuration["ServiceUrls:CouponAPI"];
+// Register the AuthService
 StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthAPI"];
+// Register the ProductService
+StaticDetails.ProductApiBase = builder.Configuration["ServiceUrls:ProductAPI"];
 
 var app = builder.Build();
 
@@ -52,3 +59,19 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+
+/*
+Scoped services are registered using AddScoped<TInterface, TImplementation>(), 
+meaning a new instance is created per HTTP request and reused within that request.
+
+Scoped lifecycle:
+	A new instance is created for each HTTP request.
+	The instance persists throughout the request and is shared within that request.
+	The same instance is used if the service is injected multiple times within the same request.
+	It is disposed of when the request ends.
+
+ 
+ 
+ 
+ */
