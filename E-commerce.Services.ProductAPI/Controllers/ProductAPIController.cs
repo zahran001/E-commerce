@@ -9,7 +9,6 @@ namespace E_commerce.Services.ProductAPI.Controllers
 {
     [Route("api/product")]
     [ApiController]
-    [Authorize]
     public class ProductAPIController : ControllerBase
     {
         // retrieve all Products
