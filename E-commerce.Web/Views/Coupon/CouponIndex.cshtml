@@ -1,4 +1,5 @@
-﻿@model IEnumerable<CouponDto>
+﻿@using E_commerce.Web.Utility
+@model IEnumerable<CouponDto>
 
 @* This model at the top will be lowercase, anywhere else Model will be uppercase. *@
 
@@ -8,7 +9,7 @@
 	<div class="card-header bg-secondary bg-gradient ml-0 py-3">
 		<div class="row">
 			<div class="col-12 text-center">
-				<h1 class="text-white">Coupons List</h1>
+				<h1 class="text-white">Coupons</h1>
 			</div>
 		</div>
 	</div>
@@ -17,8 +18,10 @@
 			<div class="col-6">
 			</div>
 			<div class="col-6 text-end">
-				<a asp-action="CreateCoupon" class="btn btn-outline-primary"><i class="bi bi-plus-square"></i> Create New Coupon</a>
-
+				@if (User.IsInRole(StaticDetails.RoleAdmin))
+				{
+					<a asp-action="CreateCoupon" class="btn btn-outline-primary"><i class="bi bi-plus-square"></i> Create New Coupon</a>
+				}
 			</div>
 		</div>
 		<table class="table">
@@ -47,9 +50,12 @@
 						<td> @((item.MinimumAmount).ToString("c"))
 						</td>
 						<td>
-							<a asp-action="DeleteCoupon" asp-route-couponId="@item.CouponId" class="btn btn-danger">
-								<i class="bi bi-trash"></i>
-							</a>
+							@if (User.IsInRole(StaticDetails.RoleAdmin))
+							{
+								<a asp-action="DeleteCoupon" asp-route-couponId="@item.CouponId" class="btn btn-danger">
+									<i class="bi bi-trash"></i>
+								</a>
+							}
 						</td>
 					</tr>
 				}
