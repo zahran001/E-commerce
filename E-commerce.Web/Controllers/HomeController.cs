@@ -1,5 +1,6 @@
 using E_commerce.Web.Models;
 using E_commerce.Web.Service.IService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -34,6 +35,27 @@ namespace E_commerce.Web.Controllers
 			}
 			return View(list);
 		}
+
+        [Authorize]
+        public async Task<IActionResult> ProductDetails(int productId)
+        {
+            ProductDto? model = new();
+
+            ResponseDto? response = await _productService.GetProductByIdAsync(productId);
+
+            if (response != null && response.IsSuccess)
+            {
+                // ResponseDto.Result is an object, so we need to deserialize the object.
+                // T obj = JsonConvert.DeserializeObject<T>(jsonString);
+
+                model = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
+            }
+            else
+            {
+                TempData["error"] = response?.Message; // null check
+            }
+            return View("ProductDetails", model);
+        }
 
         public IActionResult Privacy()
         {
