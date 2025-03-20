@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using E_commerce.Services.ProductAPI.Models;
-using E_commerce.Services.ProductAPI.Models.Dto;
+using E_commerce.Services.ShoppingCartAPI.Models;
+using E_commerce.Services.ShoppingCartAPI.Models.Dto;
 
-namespace E_commerce.Services.ProductAPI
+namespace E_commerce.Services.ShoppingCartAPI
 {
     public class MappingConfig
     {
@@ -11,8 +11,8 @@ namespace E_commerce.Services.ProductAPI
         {
             var mappingConfig = new MapperConfiguration(config =>
             {
-                config.CreateMap<ProductDto, Product>();
-                config.CreateMap<Product, ProductDto>();
+                config.CreateMap<CartHeader, CartHeaderDto>().ReverseMap();
+                config.CreateMap<CartDetails, CartDetailsDto>().ReverseMap();
                 // reverse mapping
 
             });
