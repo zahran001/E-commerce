@@ -16,8 +16,10 @@ namespace E_commerce.Services.ShoppingCartAPI.Models
         [ForeignKey("CartHeaderId")]
         public CartHeader CartHeader { get; set; } // Navigation property to access the associated CartHeader
 
-        public int ProductId { get; set; } // Populate the product details by calling the ProductAPI
-
+        public int ProductId { get; set; } 
+        
+        // Populate the product details by calling the ProductAPI
+        
         [NotMapped]
         public ProductDto Product { get; set; } // Don't add that to the database
 
