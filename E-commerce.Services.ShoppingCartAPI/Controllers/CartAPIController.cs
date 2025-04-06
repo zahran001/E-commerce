@@ -37,6 +37,7 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 {
                     // create header and details
                     CartHeader cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
+                    // DestinationType destination = _mapper.Map<DestinationType>(sourceObject);
                     _db.CartHeaders.Add(cartHeader);
                     await _db.SaveChangesAsync();
                     // Save changes to retrieve the CartHeaderId.
@@ -48,12 +49,12 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 }
                 else
                 {
-                    // header is not null
-                    // so there is an entry in CartHeader for that user
+                    // header is not null - there is an entry in CartHeader for that user
                     // then we have to check if CartDetails has the same product -> check based on the productId
                     var cartDetailsFromDb = await _db.CartDetails.AsNoTracking().FirstOrDefaultAsync(
                         u => u.ProductId == cartDto.CartDetails.First().ProductId && 
                         u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
+                    // Check the ProductId
                     // Using First() here since CartDetail will have only one entry. Because the only way to add an item to the shopping cart is from the Details page of a product.
                     // So it is impossible that they add two products at the same time.
                     
@@ -97,6 +98,45 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
             }
             return _response;
             
+        }
+
+
+        [HttpPost("RemoveCart")]
+        public async Task<ResponseDto> RemoveCart([FromBody] int cartDetailsId)
+        {
+            try
+            {
+                // Retrieve cartDetails from the database 
+                CartDetails cartDetails = _db.CartDetails.First(u => u.CartDetailsId == cartDetailsId);
+
+                
+                int totalCountofCartItem = _db.CartDetails.Where(u => u.CartHeaderId == cartDetails.CartHeaderId).Count();
+
+                //remove the CartDetails Entry 
+                _db.CartDetails.Remove(cartDetails); // removes the item from the cart
+
+                // If that is the only item in the cart for that user, remove the CartHeader as well
+                if (totalCountofCartItem == 1)
+                {
+                    // retrieve the CartHeader from the database
+                    var cartHeaderToRemove = await _db.CartHeaders.
+                        FirstOrDefaultAsync(u => u.CartHeaderId == cartDetails.CartHeaderId);
+
+                    _db.CartHeaders.Remove(cartHeaderToRemove);
+                }
+                await _db.SaveChangesAsync();
+                _response.Result = true;
+            
+            }
+            catch (Exception ex)
+            {
+                _response.Message = ex.InnerException?.Message ?? ex.Message; // Get the inner exception details if available
+                _response.IsSuccess = false;
+
+                Console.WriteLine($"Error: {ex}"); // Log full exception in console (use logging in production)
+            }
+            return _response;
+
         }
 
 
