@@ -19,11 +19,44 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         private ResponseDto _response; // Plain Object, Not Injected
         private IMapper _mapper;
 
+        //  Sample Usage: var result = _mapper.Map<DestinationClass>(sourceObject);
         public CartAPIController(IMapper mapper, ApplicationDbContext db)
         {
             _response = new ResponseDto();
             _mapper = mapper;
             _db = db;
+        }
+
+        [HttpGet("GetCart/{userId}")]
+        public async Task<ResponseDto> GetCart(string userId) // userId is a guid
+        {
+            try
+            {
+                CartDto cart = new()
+                {
+                    // pupulate the cart header
+                    CartHeader = _mapper.Map<CartHeaderDto>(_db.CartHeaders.First(u => u.UserId == userId))
+
+                };
+                // populate the cart details
+                cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDto>>
+                    (_db.CartDetails.Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId));
+
+                // populate cartToatl
+                foreach(var item in cart.CartDetails)
+                {
+                    cart.CartHeader.CartTotal += (item.Count * item.Product.Price); // Price is in ProductDto
+                }
+                
+                _response.Result = cart;
+
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
         }
 
         [HttpPost("CartUpsert")]
