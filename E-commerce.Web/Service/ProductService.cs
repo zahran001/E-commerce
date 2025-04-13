@@ -18,7 +18,7 @@ namespace E_commerce.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = StaticDetails.ApiType.POST,
-                Data = productDto,
+                Data = productDto, // Pass product data
                 Url = StaticDetails.ProductApiBase + "/api/product/"
             });
         }

@@ -3,11 +3,10 @@ using E_commerce.Services.ShoppingCartAPI;
 using E_commerce.Services.ShoppingCartAPI.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using Microsoft.OpenApi.Models;
 using E_commerce.Services.ShoppingCartAPI.Extensions;
+using E_commerce.Services.ShoppingCartAPI.Service.IService;
+using E_commerce.Services.ShoppingCartAPI.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +23,14 @@ IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 // we want to use AutoMapper using dependency injection
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Registering the ProductService as a scoped service.
+builder.Services.AddScoped<IProductService, ProductService>();
+
+// Registering an HttpClient named "Product" in the dependency injection container.
+// The BaseAddress (root URL) for this client is configured from appsettings.json under ServiceUrls:ProductAPI.
+// This allows making HTTP requests to the ProductAPI without hardcoding the base URL in the code.
+builder.Services.AddHttpClient("Product", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

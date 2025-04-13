@@ -2,6 +2,7 @@
 using E_commerce.Services.ShoppingCartAPI.Data;
 using E_commerce.Services.ShoppingCartAPI.Models;
 using E_commerce.Services.ShoppingCartAPI.Models.Dto;
+using E_commerce.Services.ShoppingCartAPI.Service.IService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +19,17 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         private readonly ApplicationDbContext _db;
         private ResponseDto _response; // Plain Object, Not Injected
         private IMapper _mapper;
+        private IProductService _productService; // inject the product service
 
-        //  Sample Usage: var result = _mapper.Map<DestinationClass>(sourceObject);
-        public CartAPIController(IMapper mapper, ApplicationDbContext db)
+        public CartAPIController(IMapper mapper, ApplicationDbContext db, IProductService productService)
         {
             _response = new ResponseDto();
             _mapper = mapper;
             _db = db;
+            _productService = productService;
         }
+
+        //  Sample Usage: var result = _mapper.Map<DestinationClass>(sourceObject);
 
         [HttpGet("GetCart/{userId}")]
         public async Task<ResponseDto> GetCart(string userId) // userId is a guid
@@ -42,9 +46,14 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDto>>
                     (_db.CartDetails.Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId));
 
-                // populate cartToatl
+                // Load all the products by calling the product service
+                IEnumerable<ProductDto> productDtos = await _productService.GetProducts();
+
+
+                // populate cartTotal
                 foreach(var item in cart.CartDetails)
                 {
+                    item.Product = productDtos.FirstOrDefault(u => u.ProductId == item.ProductId);
                     cart.CartHeader.CartTotal += (item.Count * item.Product.Price); // Price is in ProductDto
                 }
                 
