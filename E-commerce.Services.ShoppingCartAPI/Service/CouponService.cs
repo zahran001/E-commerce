@@ -4,30 +4,28 @@ using Newtonsoft.Json;
 
 namespace E_commerce.Services.ShoppingCartAPI.Service
 {
-    public class ProductService : IProductService
+    public class CouponService : ICouponService
     {
-        // Injecting IHttpClientFactory to make http call
         private readonly IHttpClientFactory _httpClientFactory;
-
-        public ProductService(IHttpClientFactory httpClientFactory)
+        public CouponService(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<IEnumerable<ProductDto>> GetProducts()
+        public async Task<CouponDto> GetCoupon(string couponCode)
         {
-            var client = _httpClientFactory.CreateClient("Product");
+            var client = _httpClientFactory.CreateClient("Coupon");
             // Based on the name, it will examine Program.cs and get the base address.
-            var response = await client.GetAsync($"/api/product");
+            var response = await client.GetAsync($"/api/coupon/GetByCode/{couponCode}");
             // Reading and deserializing the response
             var apiContent = await response.Content.ReadAsStringAsync();
             var apiResponse = JsonConvert.DeserializeObject<ResponseDto>(apiContent);
             if (apiResponse.IsSuccess)
             {
-                return JsonConvert.DeserializeObject<IEnumerable<ProductDto>>(Convert.ToString(apiResponse.Result));
+                return JsonConvert.DeserializeObject<CouponDto>(Convert.ToString(apiResponse.Result));
             }
-            return new List<ProductDto>();
-            
+            return new CouponDto();
+
         }
     }
 }

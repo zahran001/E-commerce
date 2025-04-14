@@ -26,11 +26,15 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Registering the ProductService as a scoped service.
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICouponService, CouponService>(); // inject the CouponService
 
 // Registering an HttpClient named "Product" in the dependency injection container.
 // The BaseAddress (root URL) for this client is configured from appsettings.json under ServiceUrls:ProductAPI.
 // This allows making HTTP requests to the ProductAPI without hardcoding the base URL in the code.
 builder.Services.AddHttpClient("Product", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+// Register HttpClient with the base address for Coupon API
+builder.Services.AddHttpClient("Coupon", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
