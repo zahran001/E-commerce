@@ -21,13 +21,15 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IProductService, ProductService>();
 builder.Services.AddHttpClient<ICouponService, CouponService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
+builder.Services.AddHttpClient<ICartService, CartService>();
 
-
-builder.Services.AddScoped<IBaseService, BaseService>(); //  register services with a scoped lifetime -  a new instance of the service will be created for each HTTP request
+// register services with a scoped lifetime -  a new instance of the service will be created for each HTTP request
+builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 // Register the CouponService
 StaticDetails.CouponApiBase = builder.Configuration["ServiceUrls:CouponAPI"];
@@ -35,6 +37,8 @@ StaticDetails.CouponApiBase = builder.Configuration["ServiceUrls:CouponAPI"];
 StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthAPI"];
 // Register the ProductService
 StaticDetails.ProductApiBase = builder.Configuration["ServiceUrls:ProductAPI"];
+// Register the ShoppingCartService
+StaticDetails.ShoppingCartAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
 
 var app = builder.Build();
 
@@ -70,8 +74,4 @@ Scoped lifecycle:
 	The instance persists throughout the request and is shared within that request.
 	The same instance is used if the service is injected multiple times within the same request.
 	It is disposed of when the request ends.
-
- 
- 
- 
  */
