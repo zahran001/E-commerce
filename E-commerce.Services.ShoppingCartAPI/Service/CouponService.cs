@@ -20,7 +20,7 @@ namespace E_commerce.Services.ShoppingCartAPI.Service
             // Reading and deserializing the response
             var apiContent = await response.Content.ReadAsStringAsync();
             var apiResponse = JsonConvert.DeserializeObject<ResponseDto>(apiContent);
-            if (apiResponse.IsSuccess)
+            if (apiResponse!=null && apiResponse.IsSuccess)
             {
                 return JsonConvert.DeserializeObject<CouponDto>(Convert.ToString(apiResponse.Result));
             }

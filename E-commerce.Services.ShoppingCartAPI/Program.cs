@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using E_commerce.Services.ShoppingCartAPI.Extensions;
 using E_commerce.Services.ShoppingCartAPI.Service.IService;
 using E_commerce.Services.ShoppingCartAPI.Service;
+using E_commerce.Services.ShoppingCartAPI.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,12 +29,15 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>(); // inject the CouponService
 
+builder.Services.AddHttpContextAccessor(); // add IHttpContextAccessor to the service container
+builder.Services.AddScoped<BackendAPIAuthenticationHttpClientHandler>();
+
 // Registering an HttpClient named "Product" in the dependency injection container.
 // The BaseAddress (root URL) for this client is configured from appsettings.json under ServiceUrls:ProductAPI.
 // This allows making HTTP requests to the ProductAPI without hardcoding the base URL in the code.
-builder.Services.AddHttpClient("Product", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+builder.Services.AddHttpClient("Product", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"])).AddHttpMessageHandler<BackendAPIAuthenticationHttpClientHandler>();
 // Register HttpClient with the base address for Coupon API
-builder.Services.AddHttpClient("Coupon", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
+builder.Services.AddHttpClient("Coupon", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"])).AddHttpMessageHandler<BackendAPIAuthenticationHttpClientHandler>();
 
 
 builder.Services.AddControllers();
