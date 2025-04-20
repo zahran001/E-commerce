@@ -58,6 +58,10 @@ namespace E_commerce.Web.Controllers
             return View("ProductDetails", model);
         }
 
+        //  This endpoint takes a product selection from the user, builds up a cart DTO
+        //  (linking it to the logged in user via their JWT),
+        //  calls the cart service to add or update that item in their cart,
+        //  and then either redirects with a success notice or redisplays the form with an error.
         [Authorize]
         [HttpPost]
         [ActionName("ProductDetails")]
