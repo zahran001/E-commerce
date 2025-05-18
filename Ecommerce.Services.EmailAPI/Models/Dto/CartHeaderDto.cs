@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-
-namespace E_commerce.Web.Models
+﻿namespace E_commerce.Web.EmailAPI.Models.Dto
 {
     public class CartHeaderDto
     {
