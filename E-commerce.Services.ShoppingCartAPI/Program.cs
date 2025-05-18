@@ -8,6 +8,7 @@ using E_commerce.Services.ShoppingCartAPI.Extensions;
 using E_commerce.Services.ShoppingCartAPI.Service.IService;
 using E_commerce.Services.ShoppingCartAPI.Service;
 using E_commerce.Services.ShoppingCartAPI.Utility;
+using Ecommerce.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,7 @@ builder.Services.AddScoped<ICouponService, CouponService>(); // inject the Coupo
 
 builder.Services.AddHttpContextAccessor(); // add IHttpContextAccessor to the service container
 builder.Services.AddScoped<BackendAPIAuthenticationHttpClientHandler>();
+builder.Services.AddScoped<IMessageBus, MessageBus>(); // Registering the MessageBus service for publishing messages to the message bus
 
 // Registering an HttpClient named "Product" in the dependency injection container.
 // The BaseAddress (root URL) for this client is configured from appsettings.json under ServiceUrls:ProductAPI.

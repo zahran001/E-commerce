@@ -52,6 +52,21 @@ namespace E_commerce.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EmailCart(CartDto cartDto)
+        {
+            ResponseDto? response = await _cartService.EmailCart(cartDto);
+
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = "You'll receive the email shortly.";
+                return RedirectToAction(nameof(CartIndex));
+            }
+            return View();
+
+        }
+
+
+        [HttpPost]
         public async Task<IActionResult> RemoveCoupon(CartDto cartDto)
         {
             cartDto.CartHeader.CouponCode = "";
