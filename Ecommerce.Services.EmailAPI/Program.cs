@@ -1,15 +1,23 @@
 using E_commerce.Services.EmailAPI.Data;
+using Ecommerce.Services.EmailAPI.Extension;
+using Ecommerce.Services.EmailAPI.Messaging;
+using Ecommerce.Services.EmailAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 // Add services to the container.
 
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+var optionBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+optionBuilder.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+builder.Services.AddSingleton(new EmailService(optionBuilder.Options));
+
+builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -32,6 +40,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 ApplyMigration();
+
+app.UseAzureServiceBusConsumer();
 
 app.Run();
 

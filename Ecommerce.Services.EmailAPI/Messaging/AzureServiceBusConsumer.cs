@@ -1,5 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 using E_commerce.Web.EmailAPI.Models.Dto;
+using Ecommerce.Services.EmailAPI.Services;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
@@ -13,9 +14,11 @@ namespace Ecommerce.Services.EmailAPI.Messaging
         private readonly string emailCartQueue;
         private readonly IConfiguration _configuration;
         private ServiceBusProcessor _emailCartProcessor;
+        private readonly EmailService _emailService;
 
-        public AzureServiceBusConsumer(IConfiguration configuration)
+        public AzureServiceBusConsumer(IConfiguration configuration, EmailService emailService)
         {
+            _emailService = emailService;
             _configuration = configuration;
             serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
             emailCartQueue = _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue");
@@ -33,6 +36,7 @@ namespace Ecommerce.Services.EmailAPI.Messaging
         {
             _emailCartProcessor.ProcessMessageAsync += OnEmailCartRequestReceived;
             _emailCartProcessor.ProcessErrorAsync += ErrorHandler;
+            await _emailCartProcessor.StartProcessingAsync();
         }
 
         public async Task Stop()
@@ -52,7 +56,8 @@ namespace Ecommerce.Services.EmailAPI.Messaging
 
             try
             {
-                // TODO - try to log email
+                // try to log email
+                await _emailService.EmailCartAndLog(objMessage);
                 await args.CompleteMessageAsync(message);
             }
             catch (Exception ex)

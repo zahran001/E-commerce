@@ -24,4 +24,6 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+
 </Project>
