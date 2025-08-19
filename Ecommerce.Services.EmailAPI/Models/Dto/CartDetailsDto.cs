@@ -1,6 +1,4 @@
-﻿using E_commerce.Services.EmailAPI.Models.Dto;
-
-namespace E_commerce.Web.EmailAPI.Models.Dto
+﻿namespace E_commerce.Services.EmailAPI.Models.Dto
 {
     public class CartDetailsDto
     {
@@ -8,7 +6,7 @@ namespace E_commerce.Web.EmailAPI.Models.Dto
 
         public int CartHeaderId { get; set; }
 
-        public CartHeaderDto? CartHeader { get; set; } 
+        public CartHeaderDto? CartHeader { get; set; }
 
         public int ProductId { get; set; } 
 

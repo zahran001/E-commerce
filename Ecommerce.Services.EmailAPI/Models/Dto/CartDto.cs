@@ -1,4 +1,4 @@
-﻿namespace E_commerce.Web.EmailAPI.Models.Dto
+﻿namespace E_commerce.Services.EmailAPI.Models.Dto
 {
     public class CartDto
     {
