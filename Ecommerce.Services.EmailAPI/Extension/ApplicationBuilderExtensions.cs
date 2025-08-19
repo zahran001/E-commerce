@@ -9,7 +9,7 @@ namespace Ecommerce.Services.EmailAPI.Extension
         // Add an implementation of IAzureServiceBusConsumer
         private static IAzureServiceBusConsumer ServiceBusConsumer { get; set; } 
 
-        public static IApplicationBuilder UseAzureServiceBusConsumer(this IApplicationBuilder app) // extension method for IApplicationBuilder
+        public static IApplicationBuilder UseAzureServiceBusConsumer(this IApplicationBuilder app) // extension method for IApplicationBuilder - that's why it's static
         {
             ServiceBusConsumer = app.ApplicationServices.GetService<IAzureServiceBusConsumer>();
             var hostApplicationLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();

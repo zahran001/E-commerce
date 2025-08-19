@@ -1,5 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
-using E_commerce.Web.EmailAPI.Models.Dto;
+using E_commerce.Services.EmailAPI.Models.Dto;
 using Ecommerce.Services.EmailAPI.Services;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Identity.Client;
@@ -14,7 +14,7 @@ namespace Ecommerce.Services.EmailAPI.Messaging
         private readonly string emailCartQueue;
         private readonly IConfiguration _configuration;
         private ServiceBusProcessor _emailCartProcessor;
-        private readonly EmailService _emailService;
+        private readonly EmailService _emailService; // EmailService - registered with Singleton implementation
 
         public AzureServiceBusConsumer(IConfiguration configuration, EmailService emailService)
         {
@@ -28,14 +28,16 @@ namespace Ecommerce.Services.EmailAPI.Messaging
             // Create a new Service Bus client on the connection string
             var client = new ServiceBusClient(serviceBusConnectionString);
 
-            // Create a processor that we can use to process the messages - we want to listen to the queue 'EmailShoppingCartQueue'
-            _emailCartProcessor = client.CreateProcessor(emailCartQueue);
+			// Create a processor that we can use to process the messages - we want to listen to the queue emailCartQueue
+			_emailCartProcessor = client.CreateProcessor(emailCartQueue);
         }
 
         public async Task Start()
         {
             _emailCartProcessor.ProcessMessageAsync += OnEmailCartRequestReceived;
             _emailCartProcessor.ProcessErrorAsync += ErrorHandler;
+
+            // Start processing messages - signals the processor to begin processing messages from the queue
             await _emailCartProcessor.StartProcessingAsync();
         }
 

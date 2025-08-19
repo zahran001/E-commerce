@@ -2,6 +2,7 @@ using E_commerce.Services.EmailAPI.Data;
 using Ecommerce.Services.EmailAPI.Extension;
 using Ecommerce.Services.EmailAPI.Messaging;
 using Ecommerce.Services.EmailAPI.Services;
+using Microsoft.Azure.Amqp;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 
 var optionBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 optionBuilder.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-builder.Services.AddSingleton(new EmailService(optionBuilder.Options));
+builder.Services.AddSingleton(new EmailService(optionBuilder.Options)); // singleton implementation of the EmailService
+// AzureServiceBusConsumer is a singleton and the DbContext is a scoped service.
+// We cannot consume a scoped service into a singleton service.
+// Thus get a new ApplicationDbContext implementation that is singleton.
 
 builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
 
@@ -41,7 +45,7 @@ app.MapControllers();
 
 ApplyMigration();
 
-app.UseAzureServiceBusConsumer();
+app.UseAzureServiceBusConsumer(); // extension method
 
 app.Run();
 

@@ -1,5 +1,5 @@
 ﻿using E_commerce.Services.EmailAPI.Data;
-using E_commerce.Web.EmailAPI.Models.Dto;
+using E_commerce.Services.EmailAPI.Models.Dto;
 using Ecommerce.Services.EmailAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
@@ -48,7 +48,7 @@ namespace Ecommerce.Services.EmailAPI.Services
                     Message = message
                 };
                 
-                // Use the DbContext to add the EmailLogger object to the database
+                // Use the DbContext to save the EmailLogger object to the database
                 await using var _db = new ApplicationDbContext(_dbOptions);
                 await _db.EmailLoggers.AddAsync(emailLog);
                 await _db.SaveChangesAsync();
