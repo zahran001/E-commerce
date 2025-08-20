@@ -12,8 +12,10 @@ namespace Ecommerce.Services.EmailAPI.Messaging
     {
         private readonly string serviceBusConnectionString;
         private readonly string emailCartQueue;
+        private readonly string logUserQueue;
         private readonly IConfiguration _configuration;
         private ServiceBusProcessor _emailCartProcessor;
+        private ServiceBusProcessor _logUserProcessor;
         private readonly EmailService _emailService; // EmailService - registered with Singleton implementation
 
         public AzureServiceBusConsumer(IConfiguration configuration, EmailService emailService)
@@ -22,30 +24,38 @@ namespace Ecommerce.Services.EmailAPI.Messaging
             _configuration = configuration;
             serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
             emailCartQueue = _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue");
+			logUserQueue = _configuration.GetValue<string>("TopicAndQueueNames:LogUserQueue");
 
-            
 
-            // Create a new Service Bus client on the connection string
-            var client = new ServiceBusClient(serviceBusConnectionString);
+			// Create a new Service Bus client on the connection string
+			var client = new ServiceBusClient(serviceBusConnectionString);
 
 			// Create a processor that we can use to process the messages - we want to listen to the queue emailCartQueue
 			_emailCartProcessor = client.CreateProcessor(emailCartQueue);
-        }
+
+			// Create a processor that we can use to process the messages - we want to listen to the queue logUserQueue
+			_logUserProcessor = client.CreateProcessor(logUserQueue);
+		}
 
         public async Task Start()
         {
             _emailCartProcessor.ProcessMessageAsync += OnEmailCartRequestReceived;
             _emailCartProcessor.ProcessErrorAsync += ErrorHandler;
+            await _emailCartProcessor.StartProcessingAsync(); // Start processing messages - signals the processor to begin processing messages from the queue
 
-            // Start processing messages - signals the processor to begin processing messages from the queue
-            await _emailCartProcessor.StartProcessingAsync();
-        }
+			_logUserProcessor.ProcessMessageAsync += OnUserRegisterRequestReceived;
+			_logUserProcessor.ProcessErrorAsync += ErrorHandler;
+			await _logUserProcessor.StartProcessingAsync();
+		}
 
-        public async Task Stop()
+		public async Task Stop()
         {
             await _emailCartProcessor.StopProcessingAsync();
             await _emailCartProcessor.DisposeAsync();
-        }
+
+			await _logUserProcessor.StopProcessingAsync();
+			await _logUserProcessor.DisposeAsync();
+		}
 
         private async Task OnEmailCartRequestReceived(ProcessMessageEventArgs args)
         {
@@ -69,7 +79,26 @@ namespace Ecommerce.Services.EmailAPI.Messaging
             }
         }
 
-        private Task ErrorHandler(ProcessErrorEventArgs args)
+		private async Task OnUserRegisterRequestReceived(ProcessMessageEventArgs args)
+		{
+			var message = args.Message;
+			var body = Encoding.UTF8.GetString(message.Body);
+			string email = JsonConvert.DeserializeObject<string>(body);
+
+			try
+			{
+				// try to log email
+				await _emailService.LogUserEmail(email);
+				await args.CompleteMessageAsync(message);
+			}
+			catch (Exception ex)
+			{
+				// Log the error
+				Console.WriteLine(ex.ToString());
+			}
+		}
+
+		private Task ErrorHandler(ProcessErrorEventArgs args)
         {
             // You can log the error here
             Console.WriteLine(args.Exception.ToString());

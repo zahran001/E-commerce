@@ -36,7 +36,13 @@ namespace Ecommerce.Services.EmailAPI.Services
             await LogAndEmail(message.ToString(), cartDto.CartHeader.Email);
         }
 
-        private async Task<bool> LogAndEmail(string message, string email)
+		public async Task LogUserEmail(string email)
+		{
+            string message = "User Registration Successful. <br/> Email : " + email;
+            await LogAndEmail(message, "admin@ecommerce.com");
+		}
+
+		private async Task<bool> LogAndEmail(string message, string email)
         {
             try
             {

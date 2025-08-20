@@ -1,5 +1,6 @@
 ﻿using E_commerce.Services.AuthAPI.Models.Dto;
 using E_commerce.Services.AuthAPI.Service.IService;
+using Ecommerce.MessageBus;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +14,15 @@ namespace E_commerce.Services.AuthAPI.Controllers
 		private readonly IAuthService _authService;
 		// add the ResponseDto
 		protected ResponseDto _response; // not accessible outside of the AuthAPIController class hierarchy
-		public AuthAPIController(IAuthService authService)
+		private readonly IMessageBus _messageBus;
+		private IConfiguration _configuration;
+
+		public AuthAPIController(IAuthService authService, IMessageBus messageBus, IConfiguration configuration)
 		{
 			_authService = authService;
 			_response = new();
+			_messageBus = messageBus;
+			_configuration = configuration;
 		}
 
 
@@ -30,6 +36,8 @@ namespace E_commerce.Services.AuthAPI.Controllers
 				_response.Message = errorMessage;
 				return BadRequest(_response);
 			}
+
+			await _messageBus.PublishMessage(model.Email, _configuration.GetValue<string>("TopicAndQueueNames:LogUserQueue"));
 
 			return Ok(_response);
 		}

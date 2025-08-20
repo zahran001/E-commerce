@@ -2,6 +2,7 @@ using E_commerce.Services.AuthAPI.Data;
 using E_commerce.Services.AuthAPI.Models;
 using E_commerce.Services.AuthAPI.Service;
 using E_commerce.Services.AuthAPI.Service.IService;
+using Ecommerce.MessageBus;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IMessageBus, MessageBus>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
