@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>E_commerce.Services.CouponAPI</RootNamespace>
+    <UserSecretsId>b1f0abf0-7369-4f9c-90e7-6f0411f75bf6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
