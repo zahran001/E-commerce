@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Ignore all files in scripts folder
+scripts/*
+!scripts/.gitkeep
+
+# User Secrets
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
