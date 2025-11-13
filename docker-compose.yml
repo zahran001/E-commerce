@@ -1,0 +1,107 @@
+services:
+  # AuthAPI - Authentication and user management
+  authapi:
+    build:
+      context: .
+      dockerfile: E-commerce.Services.AuthAPI/Dockerfile
+    container_name: ecommerce-authapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # Connect to host SQL Server using special Docker DNS name
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_Auth;Trusted_Connection=True;TrustServerCertificate=True
+      - ApiSettings__JwtOptions__Secret=${JWT_SECRET}
+      - ApiSettings__JwtOptions__Issuer=e-commerce-auth-api
+      - ApiSettings__JwtOptions__Audience=e-commerce-client
+      - TopicAndQueueNames__LogUserQueue=loguser
+      - ServiceBusConnectionString=${AZURE_SERVICEBUS_CONNECTION}
+    ports:
+      - "7002:8080"
+
+  # ProductAPI - Product catalog management
+  productapi:
+    build:
+      context: .
+      dockerfile: E-commerce.Services.ProductAPI/Dockerfile
+    container_name: ecommerce-productapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_Product;Trusted_Connection=True;TrustServerCertificate=True
+      - ApiSettings__Secret=${JWT_SECRET}
+      - ApiSettings__Issuer=e-commerce-auth-api
+      - ApiSettings__Audience=e-commerce-client
+    ports:
+      - "7000:8080"
+
+  # CouponAPI - Discount coupon management
+  couponapi:
+    build:
+      context: .
+      dockerfile: E-commerce.Services.CouponAPI/Dockerfile
+    container_name: ecommerce-couponapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_Coupon;Trusted_Connection=True;TrustServerCertificate=True
+      - ApiSettings__Secret=${JWT_SECRET}
+      - ApiSettings__Issuer=e-commerce-auth-api
+      - ApiSettings__Audience=e-commerce-client
+    ports:
+      - "7001:8080"
+
+  # ShoppingCartAPI - Shopping cart operations
+  shoppingcartapi:
+    build:
+      context: .
+      dockerfile: E-commerce.Services.ShoppingCartAPI/Dockerfile
+    container_name: ecommerce-shoppingcartapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_ShoppingCart;Trusted_Connection=True;TrustServerCertificate=True
+      - ApiSettings__Secret=${JWT_SECRET}
+      - ApiSettings__Issuer=e-commerce-auth-api
+      - ApiSettings__Audience=e-commerce-client
+      # Service-to-service URLs (Docker internal networking)
+      - ServiceUrls__ProductAPI=http://productapi:8080
+      - ServiceUrls__CouponAPI=http://couponapi:8080
+      - ServiceBusConnectionString=${AZURE_SERVICEBUS_CONNECTION}
+      - TopicAndQueueNames__EmailShoppingCartQueue=emailshoppingcart
+    ports:
+      - "7003:8080"
+    depends_on:
+      - productapi
+      - couponapi
+
+  # EmailAPI - Background service for email notifications
+  emailapi:
+    build:
+      context: .
+      dockerfile: Ecommerce.Services.EmailAPI/Dockerfile
+    container_name: ecommerce-emailapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_Email;Trusted_Connection=True;TrustServerCertificate=True
+      - ServiceBusConnectionString=${AZURE_SERVICEBUS_CONNECTION}
+      - TopicAndQueueNames__EmailShoppingCartQueue=emailshoppingcart
+      - TopicAndQueueNames__LogUserQueue=loguser
+    ports:
+      - "7298:8080"
+
+  # Web MVC - Frontend application
+  web:
+    build:
+      context: .
+      dockerfile: E-commerce.Web/Dockerfile
+    container_name: ecommerce-web
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # Service URLs (Docker internal networking)
+      - ServiceUrls__AuthAPI=http://authapi:8080
+      - ServiceUrls__ProductAPI=http://productapi:8080
+      - ServiceUrls__CouponAPI=http://couponapi:8080
+      - ServiceUrls__ShoppingCartAPI=http://shoppingcartapi:8080
+    ports:
+      - "7230:8080"
+    depends_on:
+      - authapi
+      - productapi
+      - couponapi
+      - shoppingcartapi
