@@ -43,6 +43,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Health check endpoint for Azure Container Apps
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "EmailAPI", timestamp = DateTime.UtcNow }));
+
 ApplyMigration();
 
 app.UseAzureServiceBusConsumer(); // extension method

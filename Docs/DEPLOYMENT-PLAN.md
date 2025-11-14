@@ -599,9 +599,109 @@ docker-compose down
 
 ---
 
-## Phase 3: Production-Ready Enhancements (Day 2)
+## Phase 3: Production-Ready Enhancements (Day 2) ⚠️ PHASE 3-LITE (MVP)
 
 **Goal:** Add observability, health checks, and resilience patterns.
+
+**Status:** ⚠️ Phase 3-Lite Completed on 2025-11-12 (Basic health checks only)
+**Time Taken:** ~15 minutes
+**Approach:** MVP - Basic health endpoints only, skip advanced observability
+
+### MVP Decision: Phase 3-Lite Approach
+
+**Decision:** Skip most of Phase 3, add only basic `/health` endpoints for Azure Container Apps health probes.
+
+**Reasoning:**
+
+1. **Azure Container Apps provides Phase 3 features out-of-the-box:**
+   - ✅ Built-in health probes (liveness/readiness)
+   - ✅ Automatic restarts on failure
+   - ✅ Log aggregation via Azure Monitor
+   - ✅ Application Insights integration (one-click enable)
+
+2. **Time efficiency for MVP:**
+   - Full Phase 3: 2-3 hours
+   - Phase 3-Lite: 15 minutes
+   - **Savings: 2+ hours** → Better invested in Phase 4 deployment
+
+3. **Advanced features can be added post-deployment:**
+   - Serilog: Azure Monitor logs are sufficient initially
+   - Correlation IDs: Add when debugging distributed tracing issues
+   - Polly resilience: Add when cascade failures occur
+   - Advanced health checks: Basic endpoints enough for container health probes
+
+4. **Portfolio value:**
+   - Employers care more about "Did you deploy to production?" than local logging setup
+   - Can demonstrate observability using Azure's built-in tools
+   - Shows pragmatic decision-making (MVP mindset)
+
+### What Was Completed (Phase 3-Lite)
+
+✅ **Basic Health Check Endpoints Added:**
+- ProductAPI: `GET /health` → Returns `{ status: "healthy", service: "ProductAPI", timestamp: ... }`
+- CouponAPI: `GET /health` → Returns `{ status: "healthy", service: "CouponAPI", timestamp: ... }`
+- AuthAPI: `GET /health` → Returns `{ status: "healthy", service: "AuthAPI", timestamp: ... }`
+- ShoppingCartAPI: `GET /health` → Returns `{ status: "healthy", service: "ShoppingCartAPI", timestamp: ... }`
+- EmailAPI: `GET /health` → Returns `{ status: "healthy", service: "EmailAPI", timestamp: ... }`
+- Web MVC: `GET /health` → Returns `{ status: "healthy", service: "WebMVC", timestamp: ... }`
+
+**Implementation:**
+```csharp
+// Added to each service's Program.cs (before app.Run())
+app.MapGet("/health", () => Results.Ok(new {
+    status = "healthy",
+    service = "ServiceName",
+    timestamp = DateTime.UtcNow
+}));
+```
+
+**Why this is sufficient:**
+- Azure Container Apps health probes need an HTTP 200 response
+- Endpoint confirms service is running and responding
+- No additional packages required (minimal dependency)
+- Can be enhanced later with database connectivity checks if needed
+
+### What Was Postponed (Full Phase 3)
+
+The following will be added **after first Azure deployment** (if needed):
+
+❌ **Structured Logging (Serilog):**
+- Reason: Azure Monitor provides built-in log aggregation
+- Add later if custom log formatting is required
+
+❌ **Correlation IDs:**
+- Reason: Application Insights handles distributed tracing automatically
+- Add later if manual correlation is needed
+
+❌ **Application Insights SDK:**
+- Reason: Will be configured during Azure deployment (Phase 4)
+- Native integration with Container Apps
+
+❌ **Resilience Patterns (Polly):**
+- Reason: No observed cascade failures yet
+- Add later when specific failure patterns emerge
+
+❌ **Advanced Health Checks:**
+- Reason: Basic endpoint sufficient for container health probes
+- Add database/Service Bus checks later if needed
+
+### When to Add Full Phase 3 Features
+
+**After Phase 4 deployment, add these if you encounter:**
+
+| Problem | Solution |
+|---------|----------|
+| Difficult to trace requests across services | Add correlation IDs + Serilog |
+| ShoppingCartAPI fails when ProductAPI is slow | Add Polly retry/circuit breaker |
+| Need custom log queries | Add Serilog with structured logging |
+| Health probe doesn't detect database issues | Enhance /health with EF Core health checks |
+| Want better telemetry | Add Application Insights custom events |
+
+**Estimated time to add later:** 1-2 hours (per feature as needed)
+
+---
+
+### Original Phase 3 Plan (For Reference)
 
 ### 3.1 Health Check Endpoints
 
@@ -2162,18 +2262,19 @@ az cost-management export list --scope /subscriptions/{subscription-id}
 
 ---
 
-**Deployment Status:** ✅ Phase 2 Complete - Ready for Phase 3
+**Deployment Status:** ✅ Phase 3-Lite Complete - Ready for Phase 4 (Azure Deployment)
 
-**Current Phase:** Phase 3 - Production-Ready Enhancements
+**Current Phase:** Phase 4 - Azure Infrastructure Setup
 
-**Completion:** [✅] Phase 1 | [✅] Phase 2 | [⏳] Phase 3 | [ ] Phase 4 | [ ] Phase 5 | [ ] Phase 6 | [ ] Phase 7
+**Completion:** [✅] Phase 1 | [✅] Phase 2 | [⚠️] Phase 3-Lite | [⏳] Phase 4 | [ ] Phase 5 | [ ] Phase 6 | [ ] Phase 7
 
 **Live URL:** [Update when deployed]
 
 **Total Time Investment:**
-- Phase 1: ~45 minutes
-- Phase 2: ~1.5 hours
-- **Total so far:** ~2 hours 15 minutes
+- Phase 1: ~45 minutes (Security hardening)
+- Phase 2: ~1.5 hours (Containerization)
+- Phase 3-Lite: ~15 minutes (Basic health checks)
+- **Total so far:** ~2.5 hours
 
 **Final Monthly Cost:** [Update after 30 days]
 
