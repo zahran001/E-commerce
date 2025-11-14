@@ -62,6 +62,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Health check endpoint for Azure Container Apps
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "WebMVC", timestamp = DateTime.UtcNow }));
+
 app.Run();
 
 
