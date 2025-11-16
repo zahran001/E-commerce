@@ -2266,7 +2266,7 @@ az cost-management export list --scope /subscriptions/{subscription-id}
 
 **Current Phase:** Phase 4 - Azure Infrastructure Setup
 
-**Completion:** [✅] Phase 1 | [✅] Phase 2 | [⚠️] Phase 3-Lite | [⏳] Phase 4 | [ ] Phase 5 | [ ] Phase 6 | [ ] Phase 7
+**Completion:** [✅] Phase 1 | [✅] Phase 2 | [✅] Phase 3-Lite | [⏳] Phase 4 | [ ] Phase 5 | [ ] Phase 6 | [ ] Phase 7
 
 **Live URL:** [Update when deployed]
 
@@ -2275,18 +2275,66 @@ az cost-management export list --scope /subscriptions/{subscription-id}
 - Phase 2: ~1.5 hours (Containerization)
 - Phase 3-Lite: ~15 minutes (Basic health checks)
 - **Total so far:** ~2.5 hours
+- **Phase 4 estimate:** 1-2 hours (first deployment)
 
-**Final Monthly Cost:** [Update after 30 days]
+**Projected Monthly Cost:** ~$60-70 (5 databases × $5 + Container Apps + Service Bus + ACR)
+
+---
+
+## Phase 4: Final Deployment Decisions (2025-11-15)
+
+### Critical Design Choices
+
+| Decision Point | Final Choice | Rationale |
+|----------------|--------------|-----------|
+| **Database Strategy** | ✅ 5 Separate Databases ($25/month) | Matches local dev, zero code changes, true microservices isolation |
+| **Service Discovery** | ✅ Azure Container Apps DNS | Use short names: `http://productapi` (auto-resolved in same environment) |
+| **Auto-Migration** | ✅ Disabled in Production | Manual migrations before deployment to prevent race conditions |
+| **Secrets Management** | ✅ Environment Variables Initially | Use env vars for MVP, migrate to Key Vault post-deployment (optional) |
+| **Service Bus Queues** | ✅ Pre-Create Infrastructure | Create `loguser` and `emailshoppingcart` queues before deploying services |
+| **Application Insights** | ⏳ Skip Initially | Add post-deployment when observability/tracing needed |
+| **NGINX Gateway** | ⏳ Skip Initially | Azure Container Apps provides built-in ingress, add Phase 5 if needed |
+| **CORS Configuration** | ✅ Required for Production | Add `AllowAll` policy for cross-origin API calls from Web MVC |
+
+### Why 5 Separate Databases?
+
+**Rejected: Single Database + Schema Separation**
+- ❌ Would break local dev setup (currently uses 5 separate databases)
+- ❌ Requires code changes in all ApplicationDbContext files
+- ❌ Requires regenerating all EF Core migrations
+- ❌ Violates microservices principle (database-per-service)
+- ❌ Saves only $20/month, costs hours of refactoring
+
+**Chosen: 5 Separate Databases (Serverless)**
+- ✅ Zero code changes - deploy as-is
+- ✅ Matches local development environment exactly
+- ✅ True microservices isolation
+- ✅ Can scale/backup each database independently
+- ✅ Easier to debug and maintain
+- ⚠️ Costs $20 more per month ($25 vs $5)
+
+**Cost-Benefit Analysis:** Spending $20/month to avoid 3-4 hours of refactoring work is the right trade-off for MVP.
+
+**Final Monthly Cost:** ~$70/month (updated from initial estimate)
 
 ---
 
 ## Resources
 
 **Project Documentation:**
+- [PUSH-TO-PRODUCTION.md](PUSH-TO-PRODUCTION.md) - **Quick deployment guide for Phase 4** ⭐
+- [PHASE4-PROGRESS.md](PHASE4-PROGRESS.md) - **Progress tracker with timestamps for Phase 4** ⭐
 - [AZURE-ENV-VARS.md](../AZURE-ENV-VARS.md) - Complete environment variables reference for Azure deployment
 - [PHASE2.md](PHASE2.md) - Containerization guide (MVP and Full approaches)
-- [PHASE2-STEPS.md](PHASE2-STEPS.md) - Step-by-step progress tracker
+- [PHASE2-STEPS.md](PHASE2-STEPS.md) - Step-by-step progress tracker for Phase 2
 - [CLAUDE.md](../CLAUDE.md) - Codebase architecture documentation
+
+**Automation Scripts:**
+- [scripts/disable-auto-migration.ps1](../scripts/disable-auto-migration.ps1) - Disable auto-migration for production (Windows)
+- [scripts/disable-auto-migration.sh](../scripts/disable-auto-migration.sh) - Disable auto-migration for production (Linux/Mac)
+- [scripts/setup-user-secrets.ps1](../scripts/setup-user-secrets.ps1) - Local development secrets setup
+- [scripts/rebuild-docker-images.ps1](../scripts/rebuild-docker-images.ps1) - Rebuild all Docker images
+- [scripts/test-health-endpoints.ps1](../scripts/test-health-endpoints.ps1) - Test health endpoints
 
 **Azure Documentation:**
 - [Container Apps](https://learn.microsoft.com/azure/container-apps/)
