@@ -77,95 +77,82 @@
 
 ### Phase 4.1: Infrastructure Setup
 **Estimated time:** 20 minutes
-**Started:** ___________
-**Completed:** ___________
+**Started:** 2025-11-16
+**Completed:** 2025-11-16
 
 #### Tasks:
-- [ ] Create Azure resource group
-  - Resource group name: `ecommerce-rg`
+- [x] Create Azure resource group
+  - Resource group name: `Ecommerce-Project`
   - Location: `eastus`
-  - Timestamp: ___________
+  - Timestamp: 2025-11-16
 
-- [ ] Create Azure SQL Server
-  - Server name: `ecommerce-sql-server`
+- [x] Create Azure SQL Server
+  - Server name: `ecommerce-sql-server-prod`
   - Admin user: `sqladmin`
-  - Timestamp: ___________
+  - Timestamp: 2025-11-16
 
-- [ ] Create 5 separate databases (Serverless tier)
-  - [ ] `ecommerce-auth`
-  - [ ] `ecommerce-product`
-  - [ ] `ecommerce-coupon`
-  - [ ] `ecommerce-cart`
-  - [ ] `ecommerce-email`
+- [x] Create 5 separate databases (Serverless tier)
+  - [x] `ecommerce-auth`
+  - [x] `ecommerce-product`
+  - [x] `ecommerce-coupon`
+  - [x] `ecommerce-cart`
+  - [x] `ecommerce-email`
   - Strategy: Matches local dev setup, zero code changes required
   - Cost: ~$25/month (5 × $5 serverless)
-  - Timestamp: ___________
+  - Timestamp: 2025-11-16
 
-- [ ] Configure SQL firewall rules
+- [x] Configure SQL firewall rules
   - Allow Azure services: ✅
-  - Allow local IP (for migrations): ___________
-  - Timestamp: ___________
+  - Allow local IP (for migrations): ✅
+  - Timestamp: 2025-11-16
 
-- [ ] Create Azure Service Bus namespace
-  - Namespace name: `ecommerce-servicebus`
+- [x] Create Azure Service Bus namespace
+  - Namespace name: `ecommerceweb`
   - SKU: Basic ($10/month)
-  - Timestamp: ___________
+  - Timestamp: 2025-11-16
 
-- [ ] Create Service Bus queues
-  - [ ] `loguser` queue
-  - [ ] `emailshoppingcart` queue
-  - Timestamp: ___________
+- [x] Create Service Bus queues
+  - [x] `loguser` queue
+  - [x] `emailshoppingcart` queue
+  - Timestamp: 2025-11-16
 
-- [ ] Create Azure Container Registry
+- [x] Create Azure Container Registry
   - Registry name: `ecommerceacr`
   - SKU: Basic ($5/month)
   - Admin enabled: Yes
-  - Timestamp: ___________
+  - Timestamp: 2025-11-16
 
 - [ ] (Optional) Create Application Insights
   - Name: `ecommerce-insights`
-  - Skipped initially: [ ]
-  - Timestamp: ___________
+  - Skipped initially: [x]
+  - Timestamp: 2025-11-16
 
 ---
 
 ### Phase 4.2: Secrets Collection
 **Estimated time:** 5 minutes
-**Started:** ___________
-**Completed:** ___________
+**Started:** 2025-11-16
+**Completed:** 2025-11-16
 
-#### Secrets to collect:
+#### Secrets Collected:
 
-```bash
-# SQL Connection String (format):
-# Server=tcp:ecommerce-sql-server.database.windows.net,1433;Database={DB_NAME};User ID=sqladmin;Password={PASSWORD};Encrypt=True;TrustServerCertificate=False;
+**Infrastructure Details:**
+- ACR: `ecommerceacr`
+- SQL Server: `ecommerce-sql-server-prod`
+- Service Bus Namespace: `ecommerceweb`
+- Resource Group: `Ecommerce-Project`
 
-# If using 5 separate databases:
-AUTH_SQL_CONN="Server=tcp:...;Database=ecommerce-auth;..."
-PRODUCT_SQL_CONN="Server=tcp:...;Database=ecommerce-product;..."
-COUPON_SQL_CONN="Server=tcp:...;Database=ecommerce-coupon;..."
-CART_SQL_CONN="Server=tcp:...;Database=ecommerce-cart;..."
-EMAIL_SQL_CONN="Server=tcp:...;Database=ecommerce-email;..."
-
-# If using single database:
-SQL_CONN="Server=tcp:...;Database=ecommerce-db;..."
-
-# Service Bus Connection String:
-SB_CONN="Endpoint=sb://ecommerce-servicebus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=..."
-
-# JWT Secret (generate new for production!):
-JWT_SECRET="$(openssl rand -base64 64)"
-# Do NOT reuse development secret!
-
-# ACR Password:
-ACR_PASSWORD="..."
+**Connection Strings Format:**
+```
+Server=tcp:ecommerce-sql-server-prod.database.windows.net,1433;Database={DB_NAME};User ID=sqladmin;Password=***;Encrypt=True;TrustServerCertificate=False;
 ```
 
-- [ ] SQL connection string(s) saved
-- [ ] Service Bus connection string saved
-- [ ] JWT secret generated (NEW, not dev secret!)
-- [ ] ACR credentials saved
-- Timestamp: ___________
+- [x] SQL connection strings saved (5 databases)
+- [x] Service Bus connection string saved
+- [x] JWT secret generated (NEW, not dev secret!)
+- [x] ACR credentials saved
+- [x] Secrets stored in `.env` file (git ignored)
+- Timestamp: 2025-11-16
 
 ---
 
