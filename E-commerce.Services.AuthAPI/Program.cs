@@ -50,7 +50,10 @@ app.MapControllers();
 // Health check endpoint for Azure Container Apps
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "AuthAPI", timestamp = DateTime.UtcNow }));
 
-ApplyMigration();
+if (!app.Environment.IsProduction())
+{
+	ApplyMigration();
+}
 
 app.Run();
 void ApplyMigration()

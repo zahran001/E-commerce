@@ -484,7 +484,7 @@ dotnet ef migrations remove
 ## Important Notes for AI Assistants
 
 1. **Always preserve ResponseDto pattern** when creating new endpoints
-2. **Never skip automatic migration** (ApplyMigration method must remain)
+2. **Never skip automatic migration** (ApplyMigration method must remain) - use hybrid approach with environment check in production
 3. **Follow naming conventions** - ApplicationDbContext, MappingConfig, etc.
 4. **Respect service boundaries** - Don't add direct database access across services
 5. **Use JWT for inter-service auth** - BackendAPIAuthenticationHttpClientHandler pattern
@@ -493,6 +493,7 @@ dotnet ef migrations remove
 8. **Database server name** - Currently "ZAHRAN", may need to update for different environments
 9. **Port allocation** - Follow existing pattern (7000-7003), document new ports
 10. **Swagger is enabled** - All APIs self-document, use for testing
+11. **PowerShell scripts must use ASCII only** - No emoji characters to avoid encoding issues
 
 ## References
 
