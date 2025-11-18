@@ -193,8 +193,10 @@ Command executed: `.\scripts\run-migrations.ps1`
 
 ### Phase 4.4: Build and Push Docker Images
 **Estimated time:** 20 minutes
-**Started:** ___________
-**Completed:** ___________
+**Started:** 2025-11-18
+**Completed:** 2025-11-18
+
+**⚠️ IMPORTANT:** Update the version number (currently `1.0.0`) in all commands below whenever building new images. Use semantic versioning (Major.Minor.Patch).
 
 #### Login to ACR:
 ```bash
@@ -203,46 +205,67 @@ az acr login --name ecommerceacr
 ```
 
 #### Build images:
-- [ ] AuthAPI
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI/Dockerfile .
-  ```
-  Timestamp: ___________
+**Current version: `1.0.0`** (update this when building new versions)
 
-- [ ] ProductAPI
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/productapi:latest -f E-commerce.Services.ProductAPI/Dockerfile .
-  ```
-  Timestamp: ___________
+> **Note for PowerShell users:** Use single-line commands or backticks (`` ` ``) for line continuation. Windows paths use backslashes.
 
-- [ ] CouponAPI
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/couponapi:latest -f E-commerce.Services.CouponAPI/Dockerfile .
+- [x] AuthAPI
+  ```powershell
+  # Change 1.0.0 to your new version number (e.g., 1.0.1, 1.1.0, 2.0.0)
+  docker build -t ecommerceacr.azurecr.io/authapi:1.0.0 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
   ```
-  Timestamp: ___________
+  Timestamp: 2025-11-18
 
-- [ ] ShoppingCartAPI
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/shoppingcartapi:latest -f E-commerce.Services.ShoppingCartAPI/Dockerfile .
+- [x] ProductAPI
+  ```powershell
+  docker build -t ecommerceacr.azurecr.io/productapi:1.0.0 -t ecommerceacr.azurecr.io/productapi:latest -f E-commerce.Services.ProductAPI\Dockerfile .
   ```
-  Timestamp: ___________
+  Timestamp: 2025-11-18
 
-- [ ] EmailAPI
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/emailapi:latest -f Ecommerce.Services.EmailAPI/Dockerfile .
+- [x] CouponAPI
+  ```powershell
+  docker build -t ecommerceacr.azurecr.io/couponapi:1.0.0 -t ecommerceacr.azurecr.io/couponapi:latest -f E-commerce.Services.CouponAPI\Dockerfile .
   ```
-  Timestamp: ___________
+  Timestamp: 2025-11-18
 
-- [ ] Web MVC
-  ```bash
-  docker build -t ecommerceacr.azurecr.io/web:latest -f E-commerce.Web/Dockerfile .
+- [x] ShoppingCartAPI
+  ```powershell
+  docker build -t ecommerceacr.azurecr.io/shoppingcartapi:1.0.0 -t ecommerceacr.azurecr.io/shoppingcartapi:latest -f E-commerce.Services.ShoppingCartAPI\Dockerfile .
   ```
-  Timestamp: ___________
+  Timestamp: 2025-11-18
+
+- [x] EmailAPI
+  ```powershell
+  docker build -t ecommerceacr.azurecr.io/emailapi:1.0.0 -t ecommerceacr.azurecr.io/emailapi:latest -f Ecommerce.Services.EmailAPI\Dockerfile .
+  ```
+  Timestamp: 2025-11-18
+
+- [x] Web MVC
+  ```powershell
+  docker build -t ecommerceacr.azurecr.io/web:1.0.0 -t ecommerceacr.azurecr.io/web:latest -f E-commerce.Web\Dockerfile .
+  ```
+  Timestamp: 2025-11-18
 
 #### Push images:
-- [ ] All 6 images pushed to ACR
-- [ ] Verified with: `az acr repository list --name ecommerceacr`
-- Timestamp: ___________
+```bash
+# Push all images (replace 1.0.0 with your version)
+docker push ecommerceacr.azurecr.io/authapi:1.0.0
+docker push ecommerceacr.azurecr.io/authapi:latest
+docker push ecommerceacr.azurecr.io/productapi:1.0.0
+docker push ecommerceacr.azurecr.io/productapi:latest
+docker push ecommerceacr.azurecr.io/couponapi:1.0.0
+docker push ecommerceacr.azurecr.io/couponapi:latest
+docker push ecommerceacr.azurecr.io/shoppingcartapi:1.0.0
+docker push ecommerceacr.azurecr.io/shoppingcartapi:latest
+docker push ecommerceacr.azurecr.io/emailapi:1.0.0
+docker push ecommerceacr.azurecr.io/emailapi:latest
+docker push ecommerceacr.azurecr.io/web:1.0.0
+docker push ecommerceacr.azurecr.io/web:latest
+```
+
+- [x] All 6 images pushed to ACR (both version and latest tags)
+- [x] Verified with: `az acr repository list --name ecommerceacr`
+- Timestamp: 2025-11-18
 
 ---
 
