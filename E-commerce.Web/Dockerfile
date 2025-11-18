@@ -22,6 +22,7 @@ RUN dotnet publish "E-commerce.Web.csproj" -c Release -o /app/publish /p:UseAppH
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 
 # Health check for web app (root endpoint instead of /health)

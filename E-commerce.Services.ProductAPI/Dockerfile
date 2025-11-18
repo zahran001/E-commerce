@@ -26,6 +26,7 @@ RUN dotnet publish "E-commerce.Services.ProductAPI.csproj" -c Release -o /app/pu
 # Stage 4: Final runtime image (minimal, production-ready)
 FROM base AS final
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 
 # Health check endpoint (will be implemented in Phase 3)

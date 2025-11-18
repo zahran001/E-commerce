@@ -23,6 +23,7 @@ RUN dotnet publish "Ecommerce.Services.EmailAPI.csproj" -c Release -o /app/publi
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 
 # Background service health check (less frequent)

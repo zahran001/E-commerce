@@ -158,44 +158,36 @@ Server=tcp:ecommerce-sql-server-prod.database.windows.net,1433;Database={DB_NAME
 
 ### Phase 4.3: Database Migrations
 **Estimated time:** 10 minutes
-**Started:** ___________
-**Completed:** ___________
+**Started:** 2025-11-16
+**Completed:** 2025-11-16
 
 **CRITICAL:** Run from local machine BEFORE deploying containers!
 
-#### Migration commands:
+#### Migration Script Used:
+Script: `scripts/run-migrations.ps1`
+Command executed: `.\scripts\run-migrations.ps1`
 
-```bash
-# Update connection string temporarily for migration
-# (Use Azure SQL connection string)
-
-cd E-commerce.Services.AuthAPI
-dotnet ef database update --connection "{AUTH_SQL_CONN}"
-# Timestamp: ___________
-
-cd ../E-commerce.Services.ProductAPI
-dotnet ef database update --connection "{PRODUCT_SQL_CONN}"
-# Timestamp: ___________
-
-cd ../E-commerce.Services.CouponAPI
-dotnet ef database update --connection "{COUPON_SQL_CONN}"
-# Timestamp: ___________
-
-cd ../E-commerce.Services.ShoppingCartAPI
-dotnet ef database update --connection "{CART_SQL_CONN}"
-# Timestamp: ___________
-
-cd ../Ecommerce.Services.EmailAPI
-dotnet ef database update --connection "{EMAIL_SQL_CONN}"
-# Timestamp: ___________
-```
+#### Migration Results:
+- [x] **AuthAPI** - ✅ Applied successfully
+- [x] **ProductAPI** - ✅ Applied successfully
+- [x] **CouponAPI** - ✅ Applied successfully
+- [x] **ShoppingCartAPI** - ✅ Applied successfully
+- [x] **EmailAPI** - ✅ Applied successfully
 
 #### Verification:
-- [ ] All migrations applied successfully
-- [ ] Seed data created (Products, Coupons)
-- [ ] No errors in migration output
-- [ ] Can connect to Azure SQL from SSMS/Azure Data Studio
-- Timestamp: ___________
+- [x] All migrations applied successfully
+- [x] Seed data created (Products, Coupons)
+- [x] No errors in migration output
+- [x] Can connect to Azure SQL databases
+- Timestamp: 2025-11-16 (Git commit: `07de42a`)
+
+#### Details:
+- All 5 databases created and populated with schema
+- Product seed data (4 products) available in `ecommerce-product` database
+- Coupon seed data (2 coupons: "10OFF", "20OFF") available in `ecommerce-coupon` database
+- User identity tables initialized in `ecommerce-auth` database
+- Cart tables initialized in `ecommerce-cart` database
+- Email logger table initialized in `ecommerce-email` database
 
 ---
 
@@ -263,12 +255,13 @@ az acr login --name ecommerceacr
 az extension add --name containerapp --upgrade
 az containerapp env create \
   --name ecommerce-env \
-  --resource-group ecommerce-rg \
+  --resource-group Ecommerce-Project \
   --location eastus
 ```
 
 - [ ] Container Apps environment created
 - [ ] Environment name: `ecommerce-env`
+- [ ] Resource group: `Ecommerce-Project`
 - Timestamp: ___________
 
 ---
