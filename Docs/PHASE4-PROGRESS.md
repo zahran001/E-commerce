@@ -221,98 +221,85 @@ Command executed: `.\scripts\run-migrations.ps1`
 ### Phase 4.4: Build and Push Docker Images
 **Estimated time:** 20 minutes
 **Started:** 2025-11-18
-**Completed:** 2025-11-18
+**Completed:** 2025-11-20
 
-**⚠️ IMPORTANT:** Update the version number (currently `1.0.0`) in all commands below whenever building new images. Use semantic versioning (Major.Minor.Patch).
+**⚠️ IMPORTANT:** Update the version number in all commands below whenever building new images. Use semantic versioning (Major.Minor.Patch).
 
-#### Login to ACR:
-```bash
-az acr login --name ecommerceacr
-# Timestamp: ___________
-```
+#### Build Instructions:
+See [BUILD_AND_DEPLOY.md](../BUILD_AND_DEPLOY.md) for complete step-by-step instructions.
 
-#### Build images:
-**Current version: `1.0.0`** (update this when building new versions)
+#### Completed Builds:
+**Version 1.0.0** - Initial release (2025-11-18)
+**Version 1.0.1** - CORS + Auto-migration fixes (2025-11-20)
 
 > **Note for PowerShell users:** Use single-line commands or backticks (`` ` ``) for line continuation. Windows paths use backslashes.
 
-- [x] AuthAPI
-  ```powershell
-  # Change 1.0.0 to your new version number (e.g., 1.0.1, 1.1.0, 2.0.0)
-  docker build -t ecommerceacr.azurecr.io/authapi:1.0.0 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
+#### Build Summary:
 
-- [x] ProductAPI
-  ```powershell
-  docker build -t ecommerceacr.azurecr.io/productapi:1.0.0 -t ecommerceacr.azurecr.io/productapi:latest -f E-commerce.Services.ProductAPI\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
+**Version 1.0.1 Images Built & Pushed (2025-11-20):**
+- [x] AuthAPI:1.0.1 + latest
+- [x] ProductAPI:1.0.1 + latest
+- [x] CouponAPI:1.0.1 + latest
+- [x] ShoppingCartAPI:1.0.1 + latest
+- [x] EmailAPI:1.0.1 + latest
+- [x] Web:1.0.1 + latest
 
-- [x] CouponAPI
-  ```powershell
-  docker build -t ecommerceacr.azurecr.io/couponapi:1.0.0 -t ecommerceacr.azurecr.io/couponapi:latest -f E-commerce.Services.CouponAPI\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
+**Changes in v1.0.1:**
+- ✅ CORS enabled on all 4 APIs (ProductAPI, CouponAPI, AuthAPI, ShoppingCartAPI)
+- ✅ Auto-migration disabled in production (all 5 services)
+- ✅ JWT settings verified and consistent
 
-- [x] ShoppingCartAPI
-  ```powershell
-  docker build -t ecommerceacr.azurecr.io/shoppingcartapi:1.0.0 -t ecommerceacr.azurecr.io/shoppingcartapi:latest -f E-commerce.Services.ShoppingCartAPI\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
-
-- [x] EmailAPI
-  ```powershell
-  docker build -t ecommerceacr.azurecr.io/emailapi:1.0.0 -t ecommerceacr.azurecr.io/emailapi:latest -f Ecommerce.Services.EmailAPI\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
-
-- [x] Web MVC
-  ```powershell
-  docker build -t ecommerceacr.azurecr.io/web:1.0.0 -t ecommerceacr.azurecr.io/web:latest -f E-commerce.Web\Dockerfile .
-  ```
-  Timestamp: 2025-11-18
-
-#### Push images:
-```bash
-# Push all images (replace 1.0.0 with your version)
-docker push ecommerceacr.azurecr.io/authapi:1.0.0
-docker push ecommerceacr.azurecr.io/authapi:latest
-docker push ecommerceacr.azurecr.io/productapi:1.0.0
-docker push ecommerceacr.azurecr.io/productapi:latest
-docker push ecommerceacr.azurecr.io/couponapi:1.0.0
-docker push ecommerceacr.azurecr.io/couponapi:latest
-docker push ecommerceacr.azurecr.io/shoppingcartapi:1.0.0
-docker push ecommerceacr.azurecr.io/shoppingcartapi:latest
-docker push ecommerceacr.azurecr.io/emailapi:1.0.0
-docker push ecommerceacr.azurecr.io/emailapi:latest
-docker push ecommerceacr.azurecr.io/web:1.0.0
-docker push ecommerceacr.azurecr.io/web:latest
-```
-
-- [x] All 6 images pushed to ACR (both version and latest tags)
-- [x] Verified with: `az acr repository list --name ecommerceacr`
-- Timestamp: 2025-11-18
+**Verification:**
+- [x] All 6 images verified in ACR Portal
+- [x] Tags `1.0.1` and `latest` pointing to same digest
+- Timestamp: 2025-11-20
 
 ---
 
 ### Phase 4.5: Create Container Apps Environment
 **Estimated time:** 5 minutes
-**Started:** ___________
-**Completed:** ___________
+**Started:** 2025-11-20
+**Completed:** 2025-11-20
 
 ```bash
-az extension add --name containerapp --upgrade
 az containerapp env create \
   --name ecommerce-env \
   --resource-group Ecommerce-Project \
-  --location eastus
+  --location eastus \
+  --logs-destination none
 ```
 
-- [ ] Container Apps environment created
-- [ ] Environment name: `ecommerce-env`
-- [ ] Resource group: `Ecommerce-Project`
-- Timestamp: ___________
+#### Completed:
+- [x] Container Apps environment created
+- [x] Environment name: `ecommerce-env`
+- [x] Resource group: `Ecommerce-Project`
+- [x] Location: `eastus`
+- [x] Logs destination: `none` (no Log Analytics cost)
+- [x] Default domain: `mangosea-a7508352.eastus.azurecontainerapps.io`
+- [x] Static IP: `52.226.106.52`
+- [x] Workload Profile: `Consumption` (pay-per-use)
+- [x] Provisioning State: `Succeeded`
+
+#### Cost Summary:
+- Environment baseline: ~$30/month
+- 6 services × $0.04/hour each: ~$180/month
+- **Total estimated:** ~$210/month
+
+#### Features Enabled (Free/Included):
+- ✅ Dapr 1.13.6 (included)
+- ✅ KEDA 2.17.2 (included)
+- ✅ Internal DNS resolution between services
+- ✅ Static public IP
+- ✅ Default free domain
+
+#### Features NOT Enabled (Cost Savings):
+- ✅ No Log Analytics (saved ~$30-50/month)
+- ✅ No Application Insights (saved ~$20-30/month)
+- ✅ No custom domain/SSL (can add later)
+- ✅ No VNet isolation (can add later)
+- ✅ No zone redundancy (single zone)
+
+- Timestamp: 2025-11-20
 
 ---
 
