@@ -32,7 +32,6 @@
   - [ ] E-commerce.Services.CouponAPI/Program.cs
   - [ ] E-commerce.Services.ShoppingCartAPI/Program.cs
   - [ ] Ecommerce.Services.EmailAPI/Program.cs
-  - Script: See `scripts/disable-auto-migration.ps1`
 
 - [ ] **Configure CORS for production** (all APIs)
   - [ ] ProductAPI
@@ -46,10 +45,38 @@
   - Audience: `e-commerce-client`
   - Secret: Generate NEW 256-bit secret for production
 
-- [ ] **Update service URLs to use short names** (for Container Apps DNS)
-  - ShoppingCartAPI: `http://productapi` and `http://couponapi`
-  - Web MVC: `http://authapi`, `http://productapi`, `http://couponapi`, `http://shoppingcartapi`
-  - Note: Azure Container Apps provides automatic DNS resolution within the same environment
+- [ ] **NO code changes needed for service URLs**
+  - ✅ appsettings.json files stay unchanged with localhost URLs
+  - ✅ Environment variables will override at runtime in Azure Container Apps
+  - Note: Use `ServiceUrls__ProductAPI=http://productapi` format in Container Apps env vars
+  - Rationale: Zero code changes, no file modifications, cleaner deployment
+
+### Service URL Strategy Justification
+
+**Decision: Environment Variables Override (Option 1)** ✅
+
+**Why this approach:**
+- ✅ Zero code changes - appsettings.json remains untouched
+- ✅ Works with existing local development setup (localhost URLs)
+- ✅ Azure Container Apps environment variables override config at runtime
+- ✅ No need to create appsettings.Azure.json files
+- ✅ Cleaner deployment process
+
+**How it works:**
+1. appsettings.json has localhost URLs (local dev)
+2. Azure Container Apps sets environment variables like `ServiceUrls__ProductAPI=http://productapi`
+3. ASP.NET Core configuration system merges env vars (overrides JSON values)
+4. At runtime, services use short names for inter-service communication
+
+**Container Apps Environment Variables to Set:**
+```
+ServiceUrls__ProductAPI=http://productapi
+ServiceUrls__CouponAPI=http://couponapi
+ServiceUrls__AuthAPI=http://authapi
+ServiceUrls__ShoppingCartAPI=http://shoppingcartapi
+```
+
+---
 
 ### Database Strategy Justification
 
