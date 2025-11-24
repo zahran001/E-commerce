@@ -375,3 +375,6 @@ appsettings.*.json
 
 # Docker environment variables (contains secrets)
 .env
+
+# Sensitive documentation
+Docs/Sensitive/
