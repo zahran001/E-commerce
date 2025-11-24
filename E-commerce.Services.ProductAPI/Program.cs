@@ -53,6 +53,16 @@ builder.Services.AddSwaggerGen(option =>
 	});
 });
 
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowAll", policy =>
+	{
+		policy.AllowAnyOrigin()
+			  .AllowAnyMethod()
+			  .AllowAnyHeader();
+	});
+});
+
 builder.AddAppAuthentication();
 
 builder.Services.AddAuthorization();
@@ -66,7 +76,12 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+	app.UseHttpsRedirection();
+}
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 
@@ -77,7 +92,10 @@ app.MapControllers();
 // Health check endpoint for Azure Container Apps
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "ProductAPI", timestamp = DateTime.UtcNow }));
 
-ApplyMigration();
+if (!app.Environment.IsProduction())
+{
+	ApplyMigration();
+}
 
 app.Run();
 
