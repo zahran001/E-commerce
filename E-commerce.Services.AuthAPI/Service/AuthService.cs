@@ -51,10 +51,15 @@ namespace E_commerce.Services.AuthAPI.Service
 
 			// retrieve the user from database
 			var user = _db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower()==loginRequestDto.UserName.ToLower());
+	
+			if(user==null)
+			{
+				return new LoginResponseDto() { User = null, Token = "" };
+			}
 
 			bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
 
-			if(user==null || !isValid)
+			if(!isValid)
 			{
 				return new LoginResponseDto() { User = null, Token = "" };
 			}
@@ -110,29 +115,25 @@ namespace E_commerce.Services.AuthAPI.Service
 					// populate userDto based on the user
 					UserDto userDto = new()
 					{
-						Email = userToReturn.Email,
+						Email = userToReturn.Email ?? "",
 						ID = userToReturn.Id,
 						FirstName = userToReturn.FirstName,
 						LastName = userToReturn.LastName,
-						PhoneNumber = userToReturn.PhoneNumber
+						PhoneNumber = userToReturn.PhoneNumber ?? ""
 					};
 
 					return "";
-
 				}
 				else
 				{
-					return result.Errors.FirstOrDefault().Description;
+					return result.Errors.FirstOrDefault()?.Description ?? "Registration failed";
 				}
 
 			}
-			catch (Exception ex) 
-			{ 
-
+			catch (Exception ex)
+			{
+				return $"Exception during registration: {ex.Message}. Inner: {ex.InnerException?.Message}";
 			}
-			return "Error Registering the User";
-
-			
 		}
 	}
 }
