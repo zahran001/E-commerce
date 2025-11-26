@@ -10,6 +10,27 @@ This document provides step-by-step instructions for building and pushing Docker
 
 ---
 
+## Current Deployment Versions
+
+Track which services are at which version. **Only increment a service's version when you make changes to it.**
+
+| Service | Current Version | Last Updated | Status |
+|---------|-----------------|--------------|--------|
+| AuthAPI | 1.0.3 | 2025-11-26 | Ready |
+| ProductAPI | 1.0.2 | 2025-11-26 | Ready |
+| CouponAPI | 1.0.2 | 2025-11-26 | Ready |
+| ShoppingCartAPI | 1.0.2 | 2025-11-26 | Ready |
+| EmailAPI | 1.0.2 | 2025-11-26 | Ready |
+| Web (MVC) | 1.0.2 | 2025-11-26 | Ready |
+
+**How to use this table:**
+- When you modify a service, increment its version number
+- Only build and push the service(s) you changed
+- Update the "Last Updated" date and "Status" column
+- Leave other services unchanged
+
+---
+
 ## Quick Start
 
 If already logged into ACR, run all build commands from repo root, then all push commands.
@@ -33,34 +54,36 @@ Login Succeeded
 
 Run these commands one at a time in PowerShell from the repository root: `c:\Users\minha\source\repos\E-commerce`
 
+**Note:** Each service has its own version number. Only update the version for services you've changed.
+
 ### 1. AuthAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/authapi:1.0.1 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/authapi:1.0.3 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
 ```
 
 ### 2. ProductAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/productapi:1.0.1 -t ecommerceacr.azurecr.io/productapi:latest -f E-commerce.Services.ProductAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/productapi:1.0.2 -t ecommerceacr.azurecr.io/productapi:latest -f E-commerce.Services.ProductAPI\Dockerfile .
 ```
 
 ### 3. CouponAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/couponapi:1.0.1 -t ecommerceacr.azurecr.io/couponapi:latest -f E-commerce.Services.CouponAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/couponapi:1.0.2 -t ecommerceacr.azurecr.io/couponapi:latest -f E-commerce.Services.CouponAPI\Dockerfile .
 ```
 
 ### 4. ShoppingCartAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/shoppingcartapi:1.0.1 -t ecommerceacr.azurecr.io/shoppingcartapi:latest -f E-commerce.Services.ShoppingCartAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/shoppingcartapi:1.0.2 -t ecommerceacr.azurecr.io/shoppingcartapi:latest -f E-commerce.Services.ShoppingCartAPI\Dockerfile .
 ```
 
 ### 5. EmailAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/emailapi:1.0.1 -t ecommerceacr.azurecr.io/emailapi:latest -f Ecommerce.Services.EmailAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/emailapi:1.0.2 -t ecommerceacr.azurecr.io/emailapi:latest -f Ecommerce.Services.EmailAPI\Dockerfile .
 ```
 
 ### 6. Web MVC
 ```powershell
-docker build -t ecommerceacr.azurecr.io/web:1.0.1 -t ecommerceacr.azurecr.io/web:latest -f E-commerce.Web\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/web:1.0.2 -t ecommerceacr.azurecr.io/web:latest -f E-commerce.Web\Dockerfile .
 ```
 
 **Command breakdown:**
@@ -79,27 +102,29 @@ docker build -t ecommerceacr.azurecr.io/web:1.0.1 -t ecommerceacr.azurecr.io/web
 
 ---
 
-## Part C: Push All Images to ACR
+## Part C: Push Images to ACR
 
-Run these commands in PowerShell after all builds complete:
+**Important:** Only push images you've built/changed. Don't push unchanged services.
+
+Run these commands in PowerShell after builds complete:
 
 ```powershell
-docker push ecommerceacr.azurecr.io/authapi:1.0.1
+docker push ecommerceacr.azurecr.io/authapi:1.0.3
 docker push ecommerceacr.azurecr.io/authapi:latest
 
-docker push ecommerceacr.azurecr.io/productapi:1.0.1
+docker push ecommerceacr.azurecr.io/productapi:1.0.2
 docker push ecommerceacr.azurecr.io/productapi:latest
 
-docker push ecommerceacr.azurecr.io/couponapi:1.0.1
+docker push ecommerceacr.azurecr.io/couponapi:1.0.2
 docker push ecommerceacr.azurecr.io/couponapi:latest
 
-docker push ecommerceacr.azurecr.io/shoppingcartapi:1.0.1
+docker push ecommerceacr.azurecr.io/shoppingcartapi:1.0.2
 docker push ecommerceacr.azurecr.io/shoppingcartapi:latest
 
-docker push ecommerceacr.azurecr.io/emailapi:1.0.1
+docker push ecommerceacr.azurecr.io/emailapi:1.0.2
 docker push ecommerceacr.azurecr.io/emailapi:latest
 
-docker push ecommerceacr.azurecr.io/web:1.0.1
+docker push ecommerceacr.azurecr.io/web:1.0.2
 docker push ecommerceacr.azurecr.io/web:latest
 ```
 
