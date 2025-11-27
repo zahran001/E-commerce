@@ -45,9 +45,9 @@
 					<tr>
 						<td> @item.CouponCode
 						</td>
-						<td> @(item.DiscountAmount.ToString("c"))
+						<td> @($"{item.DiscountAmount:$#,##0.00}")
 						</td>
-						<td> @((item.MinimumAmount).ToString("c"))
+						<td> @($"{item.MinimumAmount:$#,##0.00}")
 						</td>
 						<td>
 							@if (User.IsInRole(StaticDetails.RoleAdmin))

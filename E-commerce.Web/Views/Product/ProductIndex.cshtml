@@ -45,7 +45,7 @@
 							@item.CategoryName
 						</td>
 						<td>
-							@((item.Price).ToString("c"))
+							@($"{item.Price:$#,##0.00}")
 						</td>
 						<td>
 							@if (User.IsInRole(StaticDetails.RoleAdmin))

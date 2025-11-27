@@ -45,7 +45,7 @@
                                 <div style="font-size:11px;">@Html.Raw(cartObj.Product.Description)</div>
                             </div>
                             <div class="col-3 col-md-2 pt-md-4" style="font-size:11px;">
-                                <span style="font-size:17px;">@string.Format("{0:c}", cartObj.Product.Price)</span>
+                                <span style="font-size:17px;">@($"{cartObj.Product.Price:$#,##0.00}")</span>
                             </div>
                             <div class="col-3 col-md-2 pt-md-4" style="font-size:11px;">
                                 <span style="font-size:17px;">@cartObj.Count</span>
@@ -74,10 +74,10 @@
                             }
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-danger" style="font-size:21px;">  Order Total :  @string.Format("{0:c}", Model.CartHeader.CartTotal)  <br /></span>
+                            <span class="text-danger" style="font-size:21px;">  Order Total :  @($"{Model.CartHeader.CartTotal:$#,##0.00}")  <br /></span>
                             @if (Model.CartHeader.Discount > 0)
                             {
-                                <span class="text-success"> Order Discount :   @string.Format("{0:c}", Model.CartHeader.Discount) </span>
+                                <span class="text-success"> Order Discount :   @($"{Model.CartHeader.Discount:$#,##0.00}") </span>
                             }
                         </div>
                     </div>

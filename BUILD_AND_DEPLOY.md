@@ -21,7 +21,7 @@ Track which services are at which version. **Only increment a service's version 
 | CouponAPI | 1.0.2 | 2025-11-26 | Ready |
 | ShoppingCartAPI | 1.0.2 | 2025-11-26 | Ready |
 | EmailAPI | 1.0.2 | 2025-11-26 | Ready |
-| Web (MVC) | 1.0.2 | 2025-11-26 | Ready |
+| Web (MVC) | 1.0.3 | 2025-11-26 | Ready |
 
 **How to use this table:**
 - When you modify a service, increment its version number
@@ -58,7 +58,7 @@ Run these commands one at a time in PowerShell from the repository root: `c:\Use
 
 ### 1. AuthAPI
 ```powershell
-docker build -t ecommerceacr.azurecr.io/authapi:1.0.3 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
+docker build -t ecommerceacr.azurecr.io/authapi:1.0.2 -t ecommerceacr.azurecr.io/authapi:latest -f E-commerce.Services.AuthAPI\Dockerfile .
 ```
 
 ### 2. ProductAPI
@@ -138,7 +138,34 @@ latest: digest: sha256:...
 
 ---
 
-## Part D: Verify Images in ACR (Optional)
+## Part D: Update Container Apps with New Images
+
+After pushing images to ACR, update the running container apps with the new image tags.
+
+**Option 1: Update all services to a specific version**
+```powershell
+.\scripts\Prod\update-container-apps.ps1 -Version "1.0.3"
+```
+
+**Option 2: Update a single service**
+```powershell
+az containerapp update `
+    --name <service-name> `
+    --resource-group Ecommerce-Project `
+    --image ecommerceacr.azurecr.io/<service-name>:1.0.3 `
+    --output none
+```
+
+**Wait for pods to restart:** Allow 1-2 minutes for containers to pull and restart with new images.
+
+**Verify the update:**
+```powershell
+az containerapp show --name <service-name> --resource-group Ecommerce-Project --query "properties.template.containers[0].image" -o tsv
+```
+
+---
+
+## Part E: Verify Images in ACR (Optional)
 
 List all repositories:
 ```powershell
