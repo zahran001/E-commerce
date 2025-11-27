@@ -1,5 +1,6 @@
 ﻿using E_commerce.Web.Models;
 using E_commerce.Web.Service.IService;
+using Microsoft.AspNetCore.Diagnostics;
 using Newtonsoft.Json;
 using System.Net;
 using System.Text;
@@ -80,7 +81,9 @@ namespace E_commerce.Web.Service
                     case HttpStatusCode.Unauthorized:
                         return new() { IsSuccess = false, Message = "Unauthorized" };
                     case HttpStatusCode.InternalServerError:
-                        return new() { IsSuccess = false, Message = "Internal Server Error" };
+                        var errorContent = await apiResponse.Content.ReadAsStringAsync();
+                        return new() { IsSuccess = false, Message = errorContent }; // return the error content from the response
+
                     default:
                         var apiContent = await apiResponse.Content.ReadAsStringAsync(); // retrieve the content from apiResponse
                         

@@ -16,7 +16,7 @@ Track which services are at which version. **Only increment a service's version 
 
 | Service | Current Version | Last Updated | Status |
 |---------|-----------------|--------------|--------|
-| AuthAPI | 1.0.3 | 2025-11-26 | Ready |
+| AuthAPI | 1.0.4 | 2025-11-27 | Ready |
 | ProductAPI | 1.0.2 | 2025-11-26 | Ready |
 | CouponAPI | 1.0.2 | 2025-11-26 | Ready |
 | ShoppingCartAPI | 1.0.2 | 2025-11-26 | Ready |
