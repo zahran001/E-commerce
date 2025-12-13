@@ -89,8 +89,34 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check endpoint for Azure Container Apps
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "CouponAPI", timestamp = DateTime.UtcNow }));
+// Health check endpoint for Azure Container Apps - database aware to trigger DB wake-up
+app.MapGet("/health", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+
+        if (!canConnect)
+        {
+            return Results.Json(
+                new { status = "unhealthy", service = "CouponAPI", timestamp = DateTime.UtcNow, database = "disconnected" },
+                statusCode: 503);
+        }
+
+        return Results.Ok(new {
+            status = "healthy",
+            service = "CouponAPI",
+            timestamp = DateTime.UtcNow,
+            database = "connected"
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(
+            new { status = "unhealthy", service = "CouponAPI", timestamp = DateTime.UtcNow, error = ex.Message },
+            statusCode: 503);
+    }
+});
 
 if (!app.Environment.IsProduction())
 {
