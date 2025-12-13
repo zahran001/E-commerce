@@ -378,3 +378,6 @@ appsettings.*.json
 
 # Sensitive documentation
 Docs/Sensitive/
+
+# Ignore files created by Claude
+.claude/

@@ -1,6 +1,8 @@
 using E_commerce.Web.Service;
 using E_commerce.Web.Service.IService;
 using E_commerce.Web.Utility;
+using E_commerce.Web.Services;
+using E_commerce.Web.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,7 +25,7 @@ builder.Services.AddHttpClient<ICouponService, CouponService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<ICartService, CartService>();
 
-// register services with a scoped lifetime -  a new instance of the service will be created for each HTTP request
+// register services with a scoped lifetime - a new instance of the service will be created for each HTTP request
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -39,6 +41,13 @@ StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthAPI"];
 StaticDetails.ProductApiBase = builder.Configuration["ServiceUrls:ProductAPI"];
 // Register the ShoppingCartService
 StaticDetails.ShoppingCartAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
+
+// Configure database warm-up settings
+builder.Services.Configure<WarmUpConfiguration>(
+    builder.Configuration.GetSection("DatabaseWarmUp"));
+
+// Register database warm-up hosted service
+builder.Services.AddHostedService<DatabaseWarmUpHostedService>();
 
 var app = builder.Build();
 
