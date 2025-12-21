@@ -8,8 +8,21 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using E_commerce.Services.CouponAPI.Extensions;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .Enrich.WithProperty("Service", "CouponAPI")
+    .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 
@@ -112,6 +125,7 @@ app.MapGet("/health", async (ApplicationDbContext db) =>
     }
     catch (Exception ex)
     {
+        Log.Warning(ex, "Health check failed - database connectivity issue");
         return Results.Json(
             new { status = "unhealthy", service = "CouponAPI", timestamp = DateTime.UtcNow, error = ex.Message },
             statusCode: 503);
@@ -123,7 +137,20 @@ if (!app.Environment.IsProduction())
     ApplyMigration();
 }
 
-app.Run();
+try
+{
+    Log.Information("Starting CouponAPI service");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "CouponAPI terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 void ApplyMigration()
 {
@@ -133,11 +160,26 @@ void ApplyMigration()
     // Get all the services from the service container
     using (var scope = app.Services.CreateScope())
     {
-        var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        if(_db.Database.GetPendingMigrations().Count() > 0)
+        try
         {
-            _db.Database.Migrate();
+            var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
+
+            if (pendingMigrations.Count > 0)
+            {
+                Log.Information("Applying {MigrationCount} pending database migrations", pendingMigrations.Count);
+                _db.Database.Migrate();
+                Log.Information("Successfully applied all pending database migrations");
+            }
+            else
+            {
+                Log.Information("No pending database migrations to apply");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Critical error applying database migrations - service startup failed");
+            throw;
         }
     }
 }
