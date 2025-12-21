@@ -236,69 +236,6 @@ This guide walks you through **Phase 1** of the Observability Implementation Gui
    - Catches catastrophic failures that prevent service start
    - Ensures Serilog flushes all logs before shutdown (critical for file/Seq sinks)
 
-#### Enhancement 1: Health Endpoint Logging
-
-The health check endpoint should log exceptions for operational visibility:
-
-```csharp
-app.MapGet("/health", async (ApplicationDbContext db) =>
-{
-    try
-    {
-        var canConnect = await db.Database.CanConnectAsync();
-        // ... success case ...
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Health check failed - database connectivity issue");
-        return Results.Json(
-            new { status = "unhealthy", service = "AuthAPI", timestamp = DateTime.UtcNow, error = ex.Message },
-            statusCode: 503);
-    }
-});
-```
-
-**Why this matters:** Without logging, health check failures appear as silent timeouts in production, making debugging difficult. The Warning level indicates degraded service state without being a catastrophic Fatal error.
-
-#### Enhancement 2: Database Migration Logging
-
-The ApplyMigration() method should provide visibility into database state changes:
-
-```csharp
-void ApplyMigration()
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        try
-        {
-            var _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var pendingMigrations = _db.Database.GetPendingMigrations().ToList();
-
-            if (pendingMigrations.Count > 0)
-            {
-                Log.Information("Applying {MigrationCount} pending database migrations", pendingMigrations.Count);
-                _db.Database.Migrate();
-                Log.Information("Successfully applied all pending database migrations");
-            }
-            else
-            {
-                Log.Information("No pending database migrations to apply");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Fatal(ex, "Critical error applying database migrations - service startup failed");
-            throw;
-        }
-    }
-}
-```
-
-**Why this matters:** Database migrations are critical to application startup. Silent migration failures lead to cryptic runtime errors later (e.g., "table doesn't exist"). Logging migration count and success provides:
-- **Startup visibility:** See exactly what schema changes occurred on service initialization
-- **Debugging aid:** If migrations fail, Fatal log shows the exact error
-- **Audit trail:** Track when database schema evolved across environments
-
 ---
 
 ### Step 4: Add ILogger to AuthAPIController
@@ -983,7 +920,11 @@ public async Task<IActionResult> Register([FromBody] RegistrationRequestDto mode
 }
 ```
 
-### 4.5 Save and Build
+### 4.5 Add Logging to Login and AssignRole Endpoints
+
+**Note:** Apply the same logging pattern to Login and AssignRole endpoints. For Login, use `{UserName}` instead of `{Email}` to match the LoginRequestDto structure. For AssignRole, log with `{Role}` and `{Email}` parameters. Follow the same three-log pattern: attempt, failure/success outcomes.
+
+### 4.6 Save and Build
 
 1. Press **Ctrl+S** to save
 2. **Build → Build Solution** (or Ctrl+Shift+B)
