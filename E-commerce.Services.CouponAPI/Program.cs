@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using E_commerce.Services.CouponAPI.Extensions;
 using Serilog;
+using Ecommerce.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+app.UseCorrelationId();
 
 app.UseAuthentication();
 

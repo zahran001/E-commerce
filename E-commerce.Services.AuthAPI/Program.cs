@@ -2,6 +2,7 @@ using E_commerce.Services.AuthAPI.Data;
 using E_commerce.Services.AuthAPI.Models;
 using E_commerce.Services.AuthAPI.Service;
 using E_commerce.Services.AuthAPI.Service.IService;
+using Ecommerce.Shared.Middleware;
 using Ecommerce.MessageBus;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +67,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+app.UseCorrelationId();
 
 app.UseAuthentication();
 // AuthAPI is responsible for authentication and authorization.

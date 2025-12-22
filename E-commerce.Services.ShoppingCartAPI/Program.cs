@@ -10,6 +10,7 @@ using E_commerce.Services.ShoppingCartAPI.Service;
 using E_commerce.Services.ShoppingCartAPI.Utility;
 using Ecommerce.MessageBus;
 using Serilog;
+using Ecommerce.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,6 +112,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+app.UseCorrelationId();
 
 app.UseAuthentication();
 

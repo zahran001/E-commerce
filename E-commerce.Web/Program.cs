@@ -4,6 +4,7 @@ using E_commerce.Web.Utility;
 using E_commerce.Web.Services;
 using E_commerce.Web.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Ecommerce.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,8 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCorrelationId();
 
 app.UseAuthentication();  // Ensure authentication middleware is used
 app.UseAuthorization();
