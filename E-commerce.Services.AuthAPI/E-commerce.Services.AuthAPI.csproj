@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\E-commerce.Shared\E-commerce.Shared.csproj" />
     <ProjectReference Include="..\Ecommerce.MessageBus\Ecommerce.MessageBus.csproj" />
   </ItemGroup>
 
