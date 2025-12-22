@@ -6,6 +6,16 @@
 > **Cost**: $0 (all open-source tools)
 > **Prerequisites**: Visual Studio 2022, all 5 microservices running locally
 
+## ⚠️ Current Limitations
+
+**External API Support**: This implementation currently supports correlation ID tracking only for **internal communication** between your microservices. The following are **not yet supported**:
+
+- Correlation ID propagation to third-party APIs
+- Receiving correlation IDs from external services
+- Cross-tenant/cross-environment tracing
+
+**Workaround**: For calls to external APIs, the correlation ID is available in your logs (`CorrelationId` field) but won't appear in the external service's logs unless they also implement this pattern.
+
 ---
 
 ## 📋 What You'll Accomplish
@@ -577,398 +587,110 @@ Find where `AzureServiceBusConsumer` is registered and ensure ILogger is injecte
 
 ## Phase 3: Add Correlation ID Middleware
 
-> **Goal**: Track one request across all services with a single ID
+> **Purpose**: Enable request tracing across all microservices with unified correlation IDs
+> **Status**: See [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) for complete, detailed guide
+> **Estimated Time**: 2.5 hours
+> **Complexity**: Medium
 
-### Step 3.1: Create Shared Middleware Class
+### Overview
 
-**1. In Solution Explorer, right-click Solution → Add → New Project**
-   - Select "Class Library"
-   - Name: `E-commerce.Shared`
-   - Click Create
+After Phase 3, you'll be able to:
+- Track any request across all 6 services using a single correlation ID
+- Search one correlation ID in Seq and see the complete request journey
+- Debug production issues in minutes instead of hours
+- Identify which service is causing delays in a multi-service flow
 
-**2. Delete the default `Class1.cs` file**
+### Architecture
 
-**3. Right-click `E-commerce.Shared` → Add → New Folder → Name it `Middleware`**
-
-**4. Right-click `Middleware` folder → Add → Class**
-   - Name: `CorrelationIdMiddleware.cs`
-   - Click Add
-
-**5. Replace entire file content with:**
-
-```csharp
-using Microsoft.AspNetCore.Http;
-using Serilog.Context;
-using System.Diagnostics;
-
-namespace Ecommerce.Shared.Middleware;
-
-public class CorrelationIdMiddleware
-{
-    private readonly RequestDelegate _next;
-    private const string CorrelationIdHeader = "X-Correlation-ID";
-
-    public CorrelationIdMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var correlationId = GetOrCreateCorrelationId(context);
-
-        // Add to response headers
-        context.Response.Headers[CorrelationIdHeader] = correlationId;
-
-        // Add to Serilog logging context (automatically includes in all logs)
-        using (LogContext.PushProperty("CorrelationId", correlationId))
-        {
-            // Add to Activity for OpenTelemetry (Phase 4)
-            Activity.Current?.SetTag("correlation_id", correlationId);
-
-            // Store in HttpContext for later retrieval
-            context.Items["CorrelationId"] = correlationId;
-
-            await _next(context);
-        }
-    }
-
-    private string GetOrCreateCorrelationId(HttpContext context)
-    {
-        // Check if correlation ID exists in request headers (from upstream service)
-        if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId))
-        {
-            return correlationId.ToString();
-        }
-
-        // Generate new correlation ID (first service in the chain)
-        return Guid.NewGuid().ToString();
-    }
-}
-
-public static class CorrelationIdMiddlewareExtensions
-{
-    public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<CorrelationIdMiddleware>();
-    }
-}
+```
+┌─────────────┐
+│   Web MVC   │ generates new correlation ID
+└──────┬──────┘
+       │ X-Correlation-ID: abc-123
+       ↓
+┌──────────────────────┐
+│ ShoppingCartAPI      │ receives ID via middleware
+└──────┬───────────────┘
+       │ (calls downstream with same ID)
+       ├─────────────────────┐
+       │                     │
+       ↓                     ↓
+   ProductAPI           CouponAPI
+   (receives ID)        (receives ID)
+       │                     │
+       └─────────────┬───────┘
+                     │ publishes to Service Bus
+                     │ CorrelationId: abc-123
+                     ↓
+            ┌─────────────────┐
+            │   EmailAPI      │ reads from message metadata
+            │  (consumer)     │ same correlation ID
+            └─────────────────┘
 ```
 
-**6. Save file (Ctrl+S)**
-
-**7. Build the Shared project:**
-   - Right-click `E-commerce.Shared` → Build
-   - Ensure it succeeds
-
----
-
-### Step 3.2: Reference Shared Project in All Services
-
-**For EACH of these projects:**
-- E-commerce.Services.AuthAPI
-- E-commerce.Services.ProductAPI
-- E-commerce.Services.CouponAPI
-- E-commerce.Services.ShoppingCartAPI
-- Ecommerce.Services.EmailAPI
-- E-commerce.Web
-
-**Do this:**
-
-1. Right-click the project → Add → Project Reference
-2. Check `E-commerce.Shared`
-3. Click OK
-
----
-
-### Step 3.3: Register Middleware in All Services
-
-**For EACH of the 5 API services** (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI):
-
-**1. Open Program.cs**
-
-**2. Add using statement at top:**
-```csharp
-using Ecommerce.Shared.Middleware;
-```
-
-**3. Find the line `app.UseHttpsRedirection();`**
-
-**4. **Immediately after**, add:**
-```csharp
-app.UseCorrelationId();
-```
-
-**Example:**
-```csharp
-app.UseHttpsRedirection();
-app.UseCorrelationId(); // ← Add this line
-app.UseAuthentication();
-app.UseAuthorization();
-```
-
-**5. Save (Ctrl+S)**
-
----
-
-### Step 3.4: Propagate Correlation ID in Service-to-Service Calls
-
-**ShoppingCartAPI calls ProductAPI and CouponAPI, so we need to forward the correlation ID.**
-
-**1. Open: `E-commerce.Services.ShoppingCartAPI/Utility/BackendAPIAuthenticationHttpClientHandler.cs`**
-
-**2. Find the `SendAsync` method:**
-
-**Before:**
-```csharp
-protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-{
-    var token = _contextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
-
-    return await base.SendAsync(request, cancellationToken);
-}
-```
-
-**After:**
-```csharp
-protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-{
-    var token = _contextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
-
-    // Propagate Correlation ID to downstream services
-    if (_contextAccessor.HttpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId))
-    {
-        request.Headers.Add("X-Correlation-ID", correlationId.ToString());
-    }
-
-    return await base.SendAsync(request, cancellationToken);
-}
-```
-
-**3. Save (Ctrl+S)**
-
----
-
-### Step 3.5: Propagate Correlation ID in Service Bus Messages
-
-**1. Open: `Ecommerce.MessageBus/MessageBus.cs`**
-
-**2. Add using at top:**
-```csharp
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
-```
-
-**3. Add IHttpContextAccessor field and constructor:**
-
-**Before:**
-```csharp
-public class MessageBus : IMessageBus
-{
-    private readonly string connectionString;
-    public MessageBus(IConfiguration configuration)
-    {
-        connectionString = configuration["ServiceBusConnectionString"]
-            ?? throw new ArgumentNullException(nameof(configuration));
-    }
-```
-
-**After:**
-```csharp
-public class MessageBus : IMessageBus
-{
-    private readonly string connectionString;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public MessageBus(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-    {
-        connectionString = configuration["ServiceBusConnectionString"]
-            ?? throw new ArgumentNullException(nameof(configuration));
-        _httpContextAccessor = httpContextAccessor;
-    }
-```
-
-**4. Update `PublishMessage` method:**
-
-**Before:**
-```csharp
-ServiceBusMessage finalMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(jsonMessage))
-{
-    CorrelationId = Guid.NewGuid().ToString(),
-};
-```
-
-**After:**
-```csharp
-// Get correlation ID from current HTTP context (or generate new one)
-var correlationId = _httpContextAccessor.HttpContext?.Items["CorrelationId"]?.ToString()
-                    ?? Activity.Current?.GetBaggageItem("correlation_id")
-                    ?? Guid.NewGuid().ToString();
-
-ServiceBusMessage finalMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(jsonMessage))
-{
-    CorrelationId = correlationId,
-    ApplicationProperties =
-    {
-        ["CorrelationId"] = correlationId,
-        ["PublishedAt"] = DateTime.UtcNow.ToString("O")
-    }
-};
-```
-
-**5. Save (Ctrl+S)**
-
-**6. Register IHttpContextAccessor in services that use MessageBus:**
-
-**Open: `E-commerce.Services.AuthAPI/Program.cs`**
-
-**Find where services are registered, add:**
-```csharp
-builder.Services.AddHttpContextAccessor();
-```
-
-**Repeat for ShoppingCartAPI** (the other service that publishes messages)
-
----
-
-### Step 3.6: Read Correlation ID in EmailAPI Consumer
-
-**1. Open: `Ecommerce.Services.EmailAPI/Messaging/AzureServiceBusConsumer.cs`**
-
-**2. Find `OnEmailShoppingCartMessageReceived` method:**
-
-**Before:**
-```csharp
-private async Task OnEmailShoppingCartMessageReceived(ProcessMessageEventArgs args)
-{
-    var message = args.Message;
-    var body = Encoding.UTF8.GetString(message.Body);
-
-    try
-    {
-        CartDto objMessage = JsonConvert.DeserializeObject<CartDto>(body);
-        await _emailService.EmailCartAndLog(objMessage);
-        await args.CompleteMessageAsync(message);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error processing Service Bus message");
-    }
-}
-```
-
-**After:**
-```csharp
-private async Task OnEmailShoppingCartMessageReceived(ProcessMessageEventArgs args)
-{
-    var message = args.Message;
-    var correlationId = message.CorrelationId ?? "unknown";
-
-    // Push correlation ID into Serilog context for all logs in this scope
-    using (LogContext.PushProperty("CorrelationId", correlationId))
-    {
-        _logger.LogInformation("Received shopping cart email message. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
-            message.MessageId, correlationId);
-
-        var body = Encoding.UTF8.GetString(message.Body);
-
-        try
-        {
-            CartDto objMessage = JsonConvert.DeserializeObject<CartDto>(body);
-            await _emailService.EmailCartAndLog(objMessage);
-            await args.CompleteMessageAsync(message);
-
-            _logger.LogInformation("Shopping cart email processed successfully for CorrelationId: {CorrelationId}", correlationId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing shopping cart email message. CorrelationId: {CorrelationId}", correlationId);
-            throw;
-        }
-    }
-}
-```
-
-**3. Update `OnUserRegisterRequestReceived` similarly:**
-
-```csharp
-private async Task OnUserRegisterRequestReceived(ProcessMessageEventArgs args)
-{
-    var message = args.Message;
-    var correlationId = message.CorrelationId ?? "unknown";
-
-    using (LogContext.PushProperty("CorrelationId", correlationId))
-    {
-        _logger.LogInformation("Received user registration message. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
-            message.MessageId, correlationId);
-
-        var body = Encoding.UTF8.GetString(message.Body);
-        string email = JsonConvert.DeserializeObject<string>(body);
-
-        try
-        {
-            await _emailService.LogUserEmail(email);
-            await args.CompleteMessageAsync(args.Message);
-
-            _logger.LogInformation("User registration email processed successfully for CorrelationId: {CorrelationId}", correlationId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing user registration message. CorrelationId: {CorrelationId}", correlationId);
-            throw;
-        }
-    }
-}
-```
-
-**4. Add using at top:**
-```csharp
-using Serilog.Context;
-```
-
-**5. Save (Ctrl+S)**
-
----
-
-### Step 3.7: Test Correlation IDs
-
-**1. Rebuild entire solution:**
-   - Right-click Solution → Rebuild Solution
-   - Ensure no errors
-
-**2. Press F5 to start all services**
-
-**3. Open Web MVC: https://localhost:7230** (or whatever port your Web runs on)
-
-**4. Register a new user:**
-   - Click Register
-   - Fill in email, name, phone, password
-   - Submit
-
-**5. Open Seq: http://localhost:5341**
-
-**6. In the search bar, type the email you registered (e.g., `test123@example.com`)**
-
-**7. Click on one of the log entries**
-
-**8. Look for "CorrelationId" field - copy the value (e.g., `a1b2c3d4-1234-5678-...`)**
-
-**9. Clear search, paste the CorrelationId into search bar**
-
-**10. You should see:**
-```
-[AuthAPI] Registration attempt for user test123@example.com
-[AuthAPI] User test123@example.com registered successfully
-[AuthAPI] Publishing registration message to queue
-[EmailAPI] Received user registration message
-[EmailAPI] User registration email processed successfully
-```
-
-**All with the SAME CorrelationId!**
-
-✅ **Checkpoint**: Search one correlation ID in Seq and see the complete request journey across services
+### Key Components
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| **CorrelationIdMiddleware** | Extract/generate correlation ID, add to logs | E-commerce.Shared/Middleware |
+| **HTTP Propagation Layer 1** | Forward ID in ShoppingCart → Product/Coupon calls | BackendAPIAuthenticationHttpClientHandler |
+| **HTTP Propagation Layer 2** | Forward ID in Web → API calls | BaseService.cs |
+| **Service Bus Propagation** | Embed ID in Service Bus messages | MessageBus.cs |
+| **Consumer Integration** | Read ID from Service Bus messages | AzureServiceBusConsumer.cs |
+
+### Implementation Steps
+
+**Complete implementation guide**: Refer to [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md)
+
+**Quick summary of steps:**
+
+1. **Create E-commerce.Shared project** with CorrelationIdMiddleware (30 min)
+2. **Add project references** to all 6 services (10 min)
+3. **Register middleware** in 5 services - skip EmailAPI (20 min)
+4. **Propagate correlation ID** in HTTP calls:
+   - ShoppingCartAPI → ProductAPI/CouponAPI via BackendAPIAuthenticationHttpClientHandler
+   - Web → APIs via BaseService.cs
+   (30 min)
+5. **Propagate in Service Bus** via MessageBus.cs and register IHttpContextAccessor (20 min)
+6. **Update EmailAPI consumer** to read and use correlation IDs from messages (20 min)
+
+### Testing Strategy
+
+**Test 1: User Registration Flow** (5 min)
+- Path: Web MVC → AuthAPI → Service Bus → EmailAPI
+- Verify all logs show the same CorrelationId in Seq
+
+**Test 2: Shopping Cart Checkout** (5 min)
+- Path: Web → ShoppingCartAPI → ProductAPI + CouponAPI → Service Bus → EmailAPI
+- Verify correlation ID propagates across 6 services
+
+**Test 3: Direct API Call** (5 min)
+- Call ProductAPI directly via Swagger
+- Verify response includes X-Correlation-ID header
+
+### Verification Checklist
+
+Core requirements:
+- [ ] E-commerce.Shared project created with CorrelationIdMiddleware
+- [ ] All 6 projects reference E-commerce.Shared
+- [ ] Middleware registered in all 5 API services (NOT EmailAPI)
+- [ ] BackendAPIAuthenticationHttpClientHandler propagates correlation ID
+- [ ] BaseService propagates correlation ID
+- [ ] MessageBus uses correlation ID from context with fallback chain
+- [ ] IHttpContextAccessor registered in AuthAPI and ShoppingCartAPI
+- [ ] EmailAPI consumer reads and propagates correlation IDs
+- [ ] Solution builds without errors
+- [ ] All 6 services start without errors
+
+### Success Criteria
+
+✅ One correlation ID tracks complete flow across all services
+✅ Correlation ID carries through API chains and Service Bus
+✅ Seq search by correlation ID returns all related logs
+✅ Response headers include X-Correlation-ID
+✅ All tests pass
+✅ No errors on startup
+✅ Web MVC tracking works
 
 ---
 
