@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System.Text;
+using Serilog.Context;
 
 namespace Ecommerce.Services.EmailAPI.Messaging
 {
@@ -17,10 +18,12 @@ namespace Ecommerce.Services.EmailAPI.Messaging
         private ServiceBusProcessor _emailCartProcessor;
         private ServiceBusProcessor _logUserProcessor;
         private readonly EmailService _emailService; // EmailService - registered with Singleton implementation
+        private readonly ILogger<AzureServiceBusConsumer> _logger;
 
-        public AzureServiceBusConsumer(IConfiguration configuration, EmailService emailService)
+        public AzureServiceBusConsumer(IConfiguration configuration, EmailService emailService, ILogger<AzureServiceBusConsumer> logger)
         {
             _emailService = emailService;
+            _logger = logger;
             _configuration = configuration;
             serviceBusConnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
             emailCartQueue = _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue");
@@ -59,50 +62,70 @@ namespace Ecommerce.Services.EmailAPI.Messaging
 
         private async Task OnEmailCartRequestReceived(ProcessMessageEventArgs args)
         {
-            // Get the message
             var message = args.Message;
-            // Deserialize the message
-            var body = Encoding.UTF8.GetString(message.Body);
-            // We have the CartDto model in the sevice bus - deserialize it
-            CartDto objMessage = JsonConvert.DeserializeObject<CartDto>(body);
+            var correlationId = message.CorrelationId ?? "unknown";
 
-            try
+            // Push correlation ID into Serilog context for all logs in this scope
+            // This ensures all logs in the processing have the same correlation ID
+            using (LogContext.PushProperty("CorrelationId", correlationId))
             {
-                // try to log email
-                await _emailService.EmailCartAndLog(objMessage);
-                await args.CompleteMessageAsync(message);
-            }
-            catch (Exception ex)
-            {
-                // Log the error
-                Console.WriteLine(ex.ToString());
+                _logger.LogInformation("Received shopping cart email message. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
+                    message.MessageId, correlationId);
+
+                // Deserialize the message
+                var body = Encoding.UTF8.GetString(message.Body);
+                // We have the CartDto model in the sevice bus - deserialize it
+                CartDto objMessage = JsonConvert.DeserializeObject<CartDto>(body);
+
+                try
+                {
+                    // try to log email
+                    await _emailService.EmailCartAndLog(objMessage);
+                    await args.CompleteMessageAsync(message);
+
+                    _logger.LogInformation("Shopping cart email processed successfully for CorrelationId: {CorrelationId}", correlationId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing shopping cart email message. CorrelationId: {CorrelationId}", correlationId);
+                    throw;
+                }
             }
         }
 
 		private async Task OnUserRegisterRequestReceived(ProcessMessageEventArgs args)
 		{
 			var message = args.Message;
-			var body = Encoding.UTF8.GetString(message.Body);
-			string email = JsonConvert.DeserializeObject<string>(body);
+			var correlationId = message.CorrelationId ?? "unknown";
 
-			try
+			using (LogContext.PushProperty("CorrelationId", correlationId))
 			{
-				// try to log email
-				await _emailService.LogUserEmail(email);
-				await args.CompleteMessageAsync(message);
-			}
-			catch (Exception ex)
-			{
-				// Log the error
-				Console.WriteLine(ex.ToString());
+				_logger.LogInformation("Received user registration message. MessageId: {MessageId}, CorrelationId: {CorrelationId}",
+					message.MessageId, correlationId);
+
+				var body = Encoding.UTF8.GetString(message.Body);
+				string email = JsonConvert.DeserializeObject<string>(body);
+
+				try
+				{
+					// try to log email
+					await _emailService.LogUserEmail(email);
+					await args.CompleteMessageAsync(args.Message);
+
+					_logger.LogInformation("User registration email processed successfully for CorrelationId: {CorrelationId}", correlationId);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Error processing user registration message. CorrelationId: {CorrelationId}", correlationId);
+					throw;
+				}
 			}
 		}
 
 		private Task ErrorHandler(ProcessErrorEventArgs args)
         {
-            // You can log the error here
-            Console.WriteLine(args.Exception.ToString());
-            return Task.CompletedTask;
+			_logger.LogError(args.Exception, "Error in Service Bus processor for source {ErrorSource}", args.ErrorSource);
+			return Task.CompletedTask;
         }
     }
 }
