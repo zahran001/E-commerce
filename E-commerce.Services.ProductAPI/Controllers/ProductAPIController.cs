@@ -18,28 +18,35 @@ namespace E_commerce.Services.ProductAPI.Controllers
         private ResponseDto _response;
         // inject AutoMapper in the controller
         private IMapper _mapper;
+        // inject ILogger
+        private readonly ILogger<ProductAPIController> _logger;
 
 
 
         // Constructor
-        public ProductAPIController(ApplicationDbContext db, IMapper mapper)
+        public ProductAPIController(ApplicationDbContext db, IMapper mapper, ILogger<ProductAPIController> logger)
         {
             _db = db;
             _response = new ResponseDto();
             _mapper = mapper;
+            _logger = logger;
         }
 
         // get all Products
         [HttpGet]
         public ResponseDto Get()
         {
+            _logger.LogInformation("Fetching all products");
+
             try
             {
                 IEnumerable<Product> objList = _db.Products.ToList();
                 _response.Result = _mapper.Map<IEnumerable<ProductDto>>(objList);
+                _logger.LogInformation("Successfully retrieved {Count} products", objList.Count());
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching all products");
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -52,13 +59,17 @@ namespace E_commerce.Services.ProductAPI.Controllers
         [Route("{id:int}")]
         public ResponseDto Get(int id)
         {
+            _logger.LogInformation("Fetching product with ID {ProductId}", id);
+
             try
             {
                 Product obj = _db.Products.First(u => u.ProductId == id);
                 _response.Result = _mapper.Map<ProductDto>(obj);
+                _logger.LogInformation("Successfully retrieved product {ProductId}", id);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching product {ProductId}", id);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -72,6 +83,8 @@ namespace E_commerce.Services.ProductAPI.Controllers
         [Authorize(Roles = "ADMIN")]
         public ResponseDto Post([FromBody] ProductDto ProductDto)
         {
+            _logger.LogInformation("Creating new product: {ProductName}", ProductDto.Name);
+
             // convert ProductDto to Product to add to _db (database)
 
             try
@@ -83,10 +96,11 @@ namespace E_commerce.Services.ProductAPI.Controllers
 
                 // return the ProductDto
                 _response.Result = _mapper.Map<ProductDto>(obj);
-
+                _logger.LogInformation("Product created successfully with ID {ProductId}", obj.ProductId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating product {ProductName}", ProductDto.Name);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -98,6 +112,8 @@ namespace E_commerce.Services.ProductAPI.Controllers
 		[Authorize(Roles = "ADMIN")]
 		public ResponseDto Put([FromBody] ProductDto ProductDto)
         {
+            _logger.LogInformation("Updating product {ProductId}: {ProductName}", ProductDto.ProductId, ProductDto.Name);
+
             // convert ProductDto to Product to add to _db (database)
 
             try
@@ -109,10 +125,11 @@ namespace E_commerce.Services.ProductAPI.Controllers
 
                 // return the ProductDto
                 _response.Result = _mapper.Map<ProductDto>(obj);
-
+                _logger.LogInformation("Product {ProductId} updated successfully", ProductDto.ProductId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating product {ProductId}", ProductDto.ProductId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -126,6 +143,7 @@ namespace E_commerce.Services.ProductAPI.Controllers
 		[Authorize(Roles = "ADMIN")]
 		public ResponseDto Delete(int id)
         {
+            _logger.LogInformation("Deleting product {ProductId}", id);
 
             try
             {
@@ -133,10 +151,11 @@ namespace E_commerce.Services.ProductAPI.Controllers
                 Product obj = _db.Products.First(u=>u.ProductId == id);
                 _db.Products.Remove(obj) ;
                 _db.SaveChanges();
-
+                _logger.LogInformation("Product {ProductId} deleted successfully", id);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting product {ProductId}", id);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }

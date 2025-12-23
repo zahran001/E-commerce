@@ -24,9 +24,11 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         private ICouponService _couponService; // inject the coupon service
         private readonly IMessageBus _messageBus; // inject the message bus
         private IConfiguration _configuration; // inject the configuration to get the connection string
+        private readonly ILogger<CartAPIController> _logger;
 
         public CartAPIController(IMapper mapper, ApplicationDbContext db, IProductService productService,
-            ICouponService couponService, IMessageBus messageBus, IConfiguration configuration)
+            ICouponService couponService, IMessageBus messageBus, IConfiguration configuration,
+            ILogger<CartAPIController> logger)
         {
             this._response = new ResponseDto();
             _mapper = mapper;
@@ -35,6 +37,7 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
             _couponService = couponService;
             _messageBus = messageBus;
             _configuration = configuration;
+            _logger = logger;
         }
 
         //  Sample Usage: var result = _mapper.Map<DestinationClass>(sourceObject);
@@ -42,6 +45,8 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         [HttpGet("GetCart/{userId}")]
         public async Task<ResponseDto> GetCart(string userId) // userId is a guid
         {
+            _logger.LogInformation("Fetching cart for user {UserId}", userId);
+
             try
             {
                 CartDto cart = new()
@@ -77,12 +82,14 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                     }
 
                 }
-                
+
                 _response.Result = cart;
+                _logger.LogInformation("Successfully retrieved cart for user {UserId} with {ItemCount} items", userId, cart.CartDetails.Count());
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching cart for user {UserId}", userId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -92,6 +99,9 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         [HttpPost("ApplyCoupon")]
         public async Task<object> ApplyCoupon([FromBody] CartDto cartDto)
         {
+            _logger.LogInformation("Applying coupon {CouponCode} to cart for user {UserId}",
+                cartDto.CartHeader.CouponCode, cartDto.CartHeader.UserId);
+
             try
             {
                 // retrieve the cart from database
@@ -101,9 +111,13 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 _db.CartHeaders.Update(cartFromDb);
                 await _db.SaveChangesAsync();
                 _response.Result = true;
+                _logger.LogInformation("Coupon {CouponCode} applied successfully to user {UserId}",
+                    cartDto.CartHeader.CouponCode, cartDto.CartHeader.UserId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error applying coupon {CouponCode} to user {UserId}",
+                    cartDto.CartHeader.CouponCode, cartDto.CartHeader.UserId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message.ToString();
             }
@@ -113,6 +127,8 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         [HttpPost("RemoveCoupon")]
         public async Task<object> RemoveCoupon([FromBody] CartDto cartDto)
         {
+            _logger.LogInformation("Removing coupon from cart for user {UserId}", cartDto.CartHeader.UserId);
+
             try
             {
                 // retrieve the cart from database
@@ -121,9 +137,11 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 _db.CartHeaders.Update(cartFromDb);
                 await _db.SaveChangesAsync();
                 _response.Result = true;
+                _logger.LogInformation("Coupon removed successfully from user {UserId}", cartDto.CartHeader.UserId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error removing coupon from user {UserId}", cartDto.CartHeader.UserId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message.ToString();
             }
@@ -134,6 +152,9 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         [HttpPost("CartUpsert")]
         public async Task<ResponseDto> CartUpsert(CartDto cartDto)
         {
+            _logger.LogInformation("Upserting cart for user {UserId} with product {ProductId}",
+                cartDto.CartHeader.UserId, cartDto.CartDetails.First().ProductId);
+
             try
             {
                 // Initially we need to find if an entry exists in the CartHeader for that UserId
@@ -141,6 +162,7 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 if (cartHeaderFromDb == null)
                 {
                     // create header and details
+                    _logger.LogInformation("Creating new cart header for user {UserId}", cartDto.CartHeader.UserId);
                     CartHeader cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
                     // DestinationType destination = _mapper.Map<DestinationType>(sourceObject);
                     _db.CartHeaders.Add(cartHeader);
@@ -151,20 +173,22 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                     _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
                     // Uses First() because only one product can be added at a time.
                     await _db.SaveChangesAsync();
+                    _logger.LogInformation("New cart created for user {UserId} with item {ProductId}",
+                        cartDto.CartHeader.UserId, cartDto.CartDetails.First().ProductId);
                 }
                 else
                 {
                     // header is not null - there is an entry in CartHeader for that user
                     // then we have to check if CartDetails has the same product -> check based on the productId
                     var cartDetailsFromDb = await _db.CartDetails.AsNoTracking().FirstOrDefaultAsync(
-                        u => u.ProductId == cartDto.CartDetails.First().ProductId && 
+                        u => u.ProductId == cartDto.CartDetails.First().ProductId &&
                         u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
                     // Check the ProductId
                     // Using First() here since CartDetail will have only one entry. Because the only way to add an item to the shopping cart is from the Details page of a product.
                     // So it is impossible that they add two products at the same time.
-                    
+
                     // We need to ensure that the entry is specific to the user we are currently handling.
-                    // Because it is possible that a different CartHeaderId might have the same product in their shopping cart. 
+                    // Because it is possible that a different CartHeaderId might have the same product in their shopping cart.
                     // We do not want to retrieve that.
 
                     // This way we find out if the same user has that same product in the shopping cart or not.
@@ -174,6 +198,8 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                     if (cartDetailsFromDb == null)
                     {
                         // create cartDetails (CartHeader already exists and they're adding a new product to the cart)
+                        _logger.LogInformation("Adding new product {ProductId} to existing cart for user {UserId}",
+                            cartDto.CartDetails.First().ProductId, cartDto.CartHeader.UserId);
                         cartDto.CartDetails.First().CartHeaderId = cartHeaderFromDb.CartHeaderId;
                         _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
                         await _db.SaveChangesAsync();
@@ -181,6 +207,8 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                     else
                     {   // product is already in the shopping cart
                         // update count in cart details
+                        _logger.LogInformation("Updating product {ProductId} quantity in cart for user {UserId}",
+                            cartDto.CartDetails.First().ProductId, cartDto.CartHeader.UserId);
                         cartDto.CartDetails.First().Count += cartDetailsFromDb.Count;
                         cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
                         cartDto.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
@@ -190,39 +218,42 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
 
                     _response.Result = cartDto;
 
-                    
+
                 }
+                _logger.LogInformation("Cart upsert completed successfully for user {UserId}", cartDto.CartHeader.UserId);
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error upserting cart for user {UserId}", cartDto.CartHeader.UserId);
                 _response.Message = ex.InnerException?.Message ?? ex.Message; // Get the inner exception details if available
                 _response.IsSuccess = false;
-
-                Console.WriteLine($"Error: {ex}"); // Log full exception in console (use logging in production)
             }
             return _response;
-            
+
         }
 
 
         [HttpPost("RemoveCart")]
         public async Task<ResponseDto> RemoveCart([FromBody] int cartDetailsId)
         {
+            _logger.LogInformation("Removing cart item {CartDetailsId}", cartDetailsId);
+
             try
             {
-                // Retrieve cartDetails from the database 
+                // Retrieve cartDetails from the database
                 CartDetails cartDetails = _db.CartDetails.First(u => u.CartDetailsId == cartDetailsId);
 
-                
+
                 int totalCountofCartItem = _db.CartDetails.Where(u => u.CartHeaderId == cartDetails.CartHeaderId).Count();
 
-                //remove the CartDetails Entry 
+                //remove the CartDetails Entry
                 _db.CartDetails.Remove(cartDetails); // removes the item from the cart
 
                 // If that is the only item in the cart for that user, remove the CartHeader as well
                 if (totalCountofCartItem == 1)
                 {
+                    _logger.LogInformation("Removing entire cart header as this was the last item");
                     // retrieve the CartHeader from the database
                     var cartHeaderToRemove = await _db.CartHeaders.
                         FirstOrDefaultAsync(u => u.CartHeaderId == cartDetails.CartHeaderId);
@@ -231,14 +262,14 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
                 }
                 await _db.SaveChangesAsync();
                 _response.Result = true;
-            
+                _logger.LogInformation("Cart item {CartDetailsId} removed successfully", cartDetailsId);
+
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error removing cart item {CartDetailsId}", cartDetailsId);
                 _response.Message = ex.InnerException?.Message ?? ex.Message; // Get the inner exception details if available
                 _response.IsSuccess = false;
-
-                Console.WriteLine($"Error: {ex}"); // Log full exception in console (use logging in production)
             }
             return _response;
 
@@ -247,13 +278,18 @@ namespace E_commerce.Services.ShoppingCartAPI.Controllers
         [HttpPost("EmailCartRequest")]
         public async Task<object> EmailCartRequest([FromBody] CartDto cartDto)
         {
+            _logger.LogInformation("Publishing email cart request for user {UserId} with {ItemCount} items",
+                cartDto.CartHeader.UserId, cartDto.CartDetails.Count());
+
             try
             {
                 await _messageBus.PublishMessage(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
                 _response.Result = true;
+                _logger.LogInformation("Email cart request published successfully for user {UserId}", cartDto.CartHeader.UserId);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error publishing email cart request for user {UserId}", cartDto.CartHeader.UserId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message.ToString();
             }

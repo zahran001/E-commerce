@@ -19,28 +19,35 @@ namespace E_commerce.Services.CouponAPI.Controllers
         private ResponseDto _response;
         // inject AutoMapper in the controller
         private IMapper _mapper;
+        // inject ILogger
+        private readonly ILogger<CouponAPIController> _logger;
 
 
 
         // Constructor
-        public CouponAPIController(ApplicationDbContext db, IMapper mapper)
+        public CouponAPIController(ApplicationDbContext db, IMapper mapper, ILogger<CouponAPIController> logger)
         {
             _db = db;
             _response = new ResponseDto();
             _mapper = mapper;
+            _logger = logger;
         }
 
         // get all coupons
         [HttpGet]
         public ResponseDto Get()
         {
+            _logger.LogInformation("Fetching all coupons");
+
             try
             {
                 IEnumerable<Coupon> objList = _db.Coupons.ToList();
                 _response.Result = _mapper.Map<IEnumerable<CouponDto>>(objList);
+                _logger.LogInformation("Successfully retrieved {Count} coupons", objList.Count());
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching all coupons");
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -53,14 +60,17 @@ namespace E_commerce.Services.CouponAPI.Controllers
         [Route("{id:int}")]
         public ResponseDto Get(int id)
         {
+            _logger.LogInformation("Fetching coupon with ID {CouponId}", id);
+
             try
             {
                 Coupon obj = _db.Coupons.First(u => u.CouponId == id);
                 _response.Result = _mapper.Map<CouponDto>(obj);
-
+                _logger.LogInformation("Successfully retrieved coupon {CouponId}", id);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching coupon {CouponId}", id);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -72,18 +82,26 @@ namespace E_commerce.Services.CouponAPI.Controllers
         [Route("GetByCode/{code}")]
         public ResponseDto GetByCode(string code)
         {
+            _logger.LogInformation("Fetching coupon with code {CouponCode}", code);
+
             try
             {
                 Coupon obj = _db.Coupons.FirstOrDefault(u => u.CouponCode.ToLower() == code.ToLower());
                 if (obj == null)
                 {
+                    _logger.LogWarning("Coupon not found for code {CouponCode}", code);
                     _response.IsSuccess = false;
+                }
+                else
+                {
+                    _logger.LogInformation("Successfully retrieved coupon {CouponCode}", code);
                 }
                 _response.Result = _mapper.Map<CouponDto>(obj);
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching coupon {CouponCode}", code);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -97,6 +115,8 @@ namespace E_commerce.Services.CouponAPI.Controllers
         [Authorize(Roles = "ADMIN")]
         public ResponseDto Post([FromBody] CouponDto couponDto)
         {
+            _logger.LogInformation("Creating new coupon with code {CouponCode}", couponDto.CouponCode);
+
             // convert couponDto to Coupon to add to _db (database)
 
             try
@@ -108,10 +128,12 @@ namespace E_commerce.Services.CouponAPI.Controllers
 
                 // return the couponDto
                 _response.Result = _mapper.Map<CouponDto>(obj);
+                _logger.LogInformation("Coupon created successfully with ID {CouponId} and code {CouponCode}", obj.CouponId, couponDto.CouponCode);
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating coupon {CouponCode}", couponDto.CouponCode);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -126,6 +148,8 @@ namespace E_commerce.Services.CouponAPI.Controllers
 		[Authorize(Roles = "ADMIN")]
 		public ResponseDto Put([FromBody] CouponDto couponDto)
         {
+            _logger.LogInformation("Updating coupon {CouponId} with code {CouponCode}", couponDto.CouponId, couponDto.CouponCode);
+
             // convert couponDto to Coupon to add to _db (database)
 
             try
@@ -137,10 +161,12 @@ namespace E_commerce.Services.CouponAPI.Controllers
 
                 // return the couponDto
                 _response.Result = _mapper.Map<CouponDto>(obj);
+                _logger.LogInformation("Coupon {CouponId} updated successfully", couponDto.CouponId);
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating coupon {CouponId}", couponDto.CouponId);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
@@ -154,6 +180,7 @@ namespace E_commerce.Services.CouponAPI.Controllers
 		[Authorize(Roles = "ADMIN")]
 		public ResponseDto Delete(int id)
         {
+            _logger.LogInformation("Deleting coupon {CouponId}", id);
 
             try
             {
@@ -161,10 +188,12 @@ namespace E_commerce.Services.CouponAPI.Controllers
                 Coupon obj = _db.Coupons.First(u=>u.CouponId == id);
                 _db.Coupons.Remove(obj) ;
                 _db.SaveChanges();
+                _logger.LogInformation("Coupon {CouponId} deleted successfully", id);
 
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting coupon {CouponId}", id);
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
