@@ -38,7 +38,13 @@ namespace E_commerce.Web.Service
             // Propagate Correlation ID from Web MVC to downstream APIs
             if (_httpContextAccessor.HttpContext?.Items.TryGetValue("CorrelationId", out var correlationId) == true)
             {
-                message.Headers.Add("X-Correlation-ID", correlationId.ToString());
+                var id = correlationId.ToString();
+                message.Headers.Add("X-Correlation-ID", id);
+                System.Diagnostics.Debug.WriteLine($"[Web BaseService] ✅ {requestDto.ApiType} {requestDto.Url} - Added X-Correlation-ID header: {id}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[Web BaseService] ❌ {requestDto.ApiType} {requestDto.Url} - No CorrelationId found in HttpContext.Items - header NOT added!");
             }
 
             message.RequestUri = new Uri(requestDto.Url);

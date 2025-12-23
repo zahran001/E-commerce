@@ -129,10 +129,46 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 ### Observability (In Progress)
 - ✅ **Structured Logging**: Serilog implemented in AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI with Console, File, and Seq sinks
-- 🔄 **EmailAPI Logging**: Serilog integration pending
-- 🔄 **Correlation ID Middleware**: Implementation planned (E-commerce.Shared project)
+- ✅ **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
+- ✅ **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
 - ✅ **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
-- 📋 **OpenTelemetry/Jaeger**: Planned for distributed tracing
+- 📋 **OpenTelemetry/Jaeger**: Planned for distributed tracing with timing analysis
+
+#### Correlation ID Implementation ✅
+
+**Complete request tracing across all 6 microservices with unified correlation IDs:**
+
+- **Middleware Generation**: `CorrelationIdMiddleware` generates unique ID for each user action (HTTP request)
+- **HTTP Propagation**: BaseService (Web → APIs) and BackendAPIAuthenticationHttpClientHandler (API → API) propagate via `X-Correlation-ID` header
+- **Service Bus Integration**: MessageBus embeds correlation ID in Service Bus messages for async flows
+- **Unified Logging**: Serilog.Context enriches all logs automatically with correlation ID
+- **End-to-End Tracing**: Single ID tracks request across Web MVC → ShoppingCartAPI → ProductAPI/CouponAPI → Service Bus → EmailAPI
+
+**Example Trace Flow:**
+```
+User Action: POST /Cart/EmailCart
+├─ Web MVC generates: CorrelationId: 96ebdbee-45fa-4264-a1b8-c1be5759f40d
+├─ Sends to ShoppingCartAPI with header
+├─ ShoppingCartAPI receives and uses same ID
+├─ ShoppingCartAPI calls ProductAPI with same ID
+├─ ShoppingCartAPI calls CouponAPI with same ID
+├─ ShoppingCartAPI publishes to Service Bus with same ID
+└─ EmailAPI consumes message with same ID
+
+Seq Query: Search "96ebdbee-45fa-4264-a1b8-c1be5759f40d"
+Result: Complete request timeline across all 6 services
+```
+
+**Key Components:**
+- [CorrelationIdMiddleware.cs](E-commerce.Shared/Middleware/CorrelationIdMiddleware.cs) - Generates and stores correlation IDs
+- [BaseService.cs](E-commerce.Web/Service/BaseService.cs) - Propagates to downstream APIs (Web → APIs)
+- [BackendAPIAuthenticationHttpClientHandler.cs](E-commerce.Services.ShoppingCartAPI/Utility/BackendAPIAuthenticationHttpClientHandler.cs) - Propagates between services (API → API)
+- [MessageBus.cs](Ecommerce.MessageBus/MessageBus.cs) - Embeds in Service Bus messages
+- [AzureServiceBusConsumer.cs](Ecommerce.Services.EmailAPI/Messaging/AzureServiceBusConsumer.cs) - Reads from messages for consumer logging
+
+**Documentation:**
+- [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) - Complete implementation guide with verification checklist
+- [DIAGNOSTIC-LOGGING-GUIDE.md](DIAGNOSTIC-LOGGING-GUIDE.md) - Debugging guide with expected log patterns and root cause analysis
 
 ---
 
@@ -255,7 +291,7 @@ E-commerce/
 ### Monitoring & Observability
 - Configured **Application Insights integration points** for distributed tracing, custom events, and dependency tracking
 - Implemented **structured logging framework** with JSON formatting for centralized log aggregation in Azure Monitor
-- Created **correlation ID middleware** for request tracing across microservices (distributed transaction visibility)
+- **✅ Correlation ID Implementation**: Middleware-based request tracing across all 6 microservices with HTTP header propagation and Service Bus integration, enabling single-ID search across complete request journey
 - Designed **health check framework** validating database connectivity, Service Bus availability, and external API reachability
 
 ### Development Practices
@@ -812,6 +848,7 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 | Priority | Enhancement | Description |
 |----------|-------------|-------------|
+| **High** | OpenTelemetry/Jaeger | Distributed tracing with timing analysis, span visualization, latency bottleneck identification |
 | **High** | CI/CD Pipeline | GitHub Actions for automated build and deployment |
 | **High** | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
 | **High** | Email Integration | SendGrid/Azure Communication Services for actual email sending |
@@ -819,6 +856,7 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 | **Medium** | API Gateway | NGINX or YARP for centralized routing and rate limiting |
 | **Medium** | Redis Caching | Product catalog and session caching |
 | **Medium** | Database Indexing | Composite indexes for frequent queries |
+| **Medium** | Diagnostic Logging Cleanup | Remove System.Diagnostics.Debug statements from production code after Phase 4 completion |
 | **Low** | Azure Key Vault | Centralized secrets management with Managed Identity |
 | **Low** | Automated Testing | Unit, integration, and E2E tests with xUnit and Playwright |
 

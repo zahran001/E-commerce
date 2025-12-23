@@ -22,7 +22,13 @@ namespace E_commerce.Services.ShoppingCartAPI.Utility
             // Propagate Correlation ID to downstream services (ProductAPI, CouponAPI)
             if (_accessor.HttpContext?.Items.TryGetValue("CorrelationId", out var correlationId) == true)
             {
-                request.Headers.Add("X-Correlation-ID", correlationId.ToString());
+                var id = correlationId.ToString();
+                request.Headers.Add("X-Correlation-ID", id);
+                System.Diagnostics.Debug.WriteLine($"[ShoppingCart Handler] ✅ {request.Method} {request.RequestUri} - Propagating CorrelationId: {id}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[ShoppingCart Handler] ❌ {request.Method} {request.RequestUri} - No CorrelationId found in HttpContext.Items - header NOT added!");
             }
 
             return await base.SendAsync(request, cancellationToken);

@@ -56,11 +56,15 @@ public class CorrelationIdMiddleware
         // Check if correlation ID exists in request headers (from upstream service)
         if (context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId))
         {
-            return correlationId.ToString();
+            var id = correlationId.ToString();
+            System.Diagnostics.Debug.WriteLine($"[MIDDLEWARE] ✅ {context.Request.Method} {context.Request.Path} - Found X-Correlation-ID header: {id}");
+            return id;
         }
 
         // Generate new correlation ID (this is the first service in the chain)
-        return Guid.NewGuid().ToString();
+        var newId = Guid.NewGuid().ToString();
+        System.Diagnostics.Debug.WriteLine($"[MIDDLEWARE] 🆕 {context.Request.Method} {context.Request.Path} - No header found, GENERATED NEW ID: {newId}");
+        return newId;
     }
 }
 

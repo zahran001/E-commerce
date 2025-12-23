@@ -35,9 +35,28 @@ namespace Ecommerce.MessageBus
 
             // Get correlation ID from current HTTP context (or generate new one)
             // Fallback chain: HttpContext → Activity baggage → new GUID
-            var correlationId = _httpContextAccessor.HttpContext?.Items["CorrelationId"]?.ToString()
-                                ?? Activity.Current?.GetBaggageItem("correlation_id")
-                                ?? Guid.NewGuid().ToString();
+            string correlationId;
+            var httpContextId = _httpContextAccessor.HttpContext?.Items["CorrelationId"]?.ToString();
+
+            if (httpContextId != null)
+            {
+                correlationId = httpContextId;
+                System.Diagnostics.Debug.WriteLine($"[MessageBus] ✅ Using correlation ID from HttpContext: {correlationId}");
+            }
+            else
+            {
+                var activityId = Activity.Current?.GetBaggageItem("correlation_id");
+                if (activityId != null)
+                {
+                    correlationId = activityId;
+                    System.Diagnostics.Debug.WriteLine($"[MessageBus] ⚠️  HttpContext null, using Activity baggage: {correlationId}");
+                }
+                else
+                {
+                    correlationId = Guid.NewGuid().ToString();
+                    System.Diagnostics.Debug.WriteLine($"[MessageBus] ⚠️  Both HttpContext and Activity null - FALLBACK: Generated new GUID: {correlationId}");
+                }
+            }
 
             ServiceBusMessage finalMessage = new ServiceBusMessage(Encoding
                 .UTF8.GetBytes(jsonMessage))
@@ -50,6 +69,7 @@ namespace Ecommerce.MessageBus
                 }
             };
 
+            System.Diagnostics.Debug.WriteLine($"[MessageBus] Publishing to queue '{topic_queue_name}' with CorrelationId: {correlationId}");
             await sender.SendMessageAsync(finalMessage);
             await client.DisposeAsync();
         }
