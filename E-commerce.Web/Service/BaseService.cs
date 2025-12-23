@@ -14,10 +14,12 @@ namespace E_commerce.Web.Service
         // To make API calls, we need an HttpClient object. We can create an HttpClient object using the IHttpClientFactory service.
         private readonly IHttpClientFactory _httpClientFactory;
         public readonly ITokenProvider _tokenProvider;
-        public BaseService(IHttpClientFactory httpClientFactory, ITokenProvider tokenProvider)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public BaseService(IHttpClientFactory httpClientFactory, ITokenProvider tokenProvider, IHttpContextAccessor httpContextAccessor)
         {
             _httpClientFactory = httpClientFactory;
             _tokenProvider = tokenProvider;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ResponseDto?> SendAsync(RequestDto requestDto, bool withBearer = true)
@@ -31,6 +33,12 @@ namespace E_commerce.Web.Service
                 // Retrieve the token
                 var token = _tokenProvider.GetToken();
                 message.Headers.Add("Authorization", $"Bearer {token}");
+            }
+
+            // Propagate Correlation ID from Web MVC to downstream APIs
+            if (_httpContextAccessor.HttpContext?.Items.TryGetValue("CorrelationId", out var correlationId) == true)
+            {
+                message.Headers.Add("X-Correlation-ID", correlationId.ToString());
             }
 
             message.RequestUri = new Uri(requestDto.Url);

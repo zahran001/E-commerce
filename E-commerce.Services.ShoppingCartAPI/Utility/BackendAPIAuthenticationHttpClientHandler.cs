@@ -19,6 +19,12 @@ namespace E_commerce.Services.ShoppingCartAPI.Utility
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+            // Propagate Correlation ID to downstream services (ProductAPI, CouponAPI)
+            if (_accessor.HttpContext?.Items.TryGetValue("CorrelationId", out var correlationId) == true)
+            {
+                request.Headers.Add("X-Correlation-ID", correlationId.ToString());
+            }
+
             return await base.SendAsync(request, cancellationToken);
         }
     }
