@@ -170,37 +170,72 @@ Result: Complete request timeline across all 6 services
 - [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) - Complete implementation guide with verification checklist
 - [DIAGNOSTIC-LOGGING-GUIDE.md](DIAGNOSTIC-LOGGING-GUIDE.md) - Debugging guide with expected log patterns and root cause analysis
 
-#### OpenTelemetry/Jaeger Integration (Phase 4) 📋
+#### OpenTelemetry/Jaeger Integration (Phase 4) ✅
 
 **Centralized Tracing Configuration via E-commerce.Shared:**
 
 A single extension method `AddEcommerceTracing()` configures OpenTelemetry across all 6 services, eliminating code duplication and ensuring consistent behavior.
 
-**Key Components:**
-- [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs) - Centralized tracing configuration
-- Auto-instrumentation for ASP.NET Core (request/response timing)
-- Auto-instrumentation for HttpClient (inter-service call timing)
-- Auto-instrumentation for SQL Client (database query timing)
-- Azure Service Bus message tracing (async flow visibility)
+**Completed Implementation:**
+- [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs) - Centralized tracing configuration ✅
+- Auto-instrumentation for ASP.NET Core (request/response timing) ✅
+- Auto-instrumentation for HttpClient (inter-service call timing) ✅
+- Auto-instrumentation for SQL Client (database query timing) ✅
+- Azure Service Bus message tracing (async flow visibility) ✅
+- Jaeger configuration in all 6 services (appsettings.json + Program.cs) ✅
 
-**Usage in any service:**
+**Integration in all 6 services:**
 ```csharp
 // In Program.cs
-builder.Services.AddEcommerceTracing("ServiceName");
+builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);
+```
+
+**Jaeger Configuration:**
+```json
+{
+  "Jaeger": {
+    "AgentHost": "localhost",
+    "AgentPort": 6831
+  }
+}
 ```
 
 **Visualization:**
-- Jaeger UI shows waterfall chart of entire request flow
-- Correlation IDs from Phase 3 link to OpenTelemetry spans
-- Database query timing visible in UI
-- Service-to-Service call latencies tracked
-- Message queue processing delays isolated
+- Jaeger UI shows waterfall chart of entire request flow across all services
+- Correlation IDs from Phase 3 linked to OpenTelemetry spans via activity tags
+- Database query timing visible with SQL statement text (development mode)
+- Service-to-Service call latencies tracked (Web → API → DB cascades)
+- Message queue processing delays isolated (async flow timing)
+- All 6 services automatically contribute to distributed traces
 
-**MVP Implementation:**
-- All-on tracing for development (simplicity)
-- SQL statement text visible (for debugging queries)
-- Configurable Jaeger endpoint (localhost:6831 default)
-- 5 API services + Web MVC all participate automatically
+**Tracing Coverage:**
+| Component | Status | Details |
+|-----------|--------|---------|
+| **HTTP Requests** | ✅ | All Web MVC and API calls traced |
+| **Database Queries** | ✅ | EF Core SQL Server queries with timing |
+| **Inter-Service Calls** | ✅ | HttpClient calls between APIs |
+| **Service Bus Messages** | ✅ | Publish/consume timing tracked |
+| **Correlation IDs** | ✅ | Linked to spans via activity tags |
+
+**Getting Started with Jaeger (Local Development):**
+```bash
+# Start Jaeger container
+docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
+
+# Set all 6 services as startup projects in Visual Studio
+# Press F5 to start all services
+
+# Open Jaeger UI
+# http://localhost:16686
+```
+
+**Services Instrumented:**
+- ✅ AuthAPI - Login, registration, JWT generation, user lookup
+- ✅ ProductAPI - Product CRUD, catalog queries
+- ✅ CouponAPI - Coupon validation, discount lookups
+- ✅ ShoppingCartAPI - Cart operations, calls to Product/Coupon APIs
+- ✅ EmailAPI - Service Bus message consumption, email logging
+- ✅ Web MVC - HTTP requests to all downstream APIs
 
 ---
 
@@ -880,7 +915,7 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 | Priority | Phase | Enhancement | Description |
 |----------|-------|-------------|-------------|
-| **In Progress** | Phase 4 | **OpenTelemetry/Jaeger** | ✅ Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
+| **Completed** | Phase 4 | **OpenTelemetry/Jaeger** | ✅ Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
 | **High** | Phase 5 | CI/CD Pipeline | GitHub Actions for automated build and deployment |
 | **High** | Phase 6 | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
 | **High** | Phase 7 | Email Integration | SendGrid/Azure Communication Services for actual email sending |
@@ -893,11 +928,11 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ---
 
-## 📊 Phase 4 Implementation Strategy
+## 📊 Phase 4 Implementation Strategy ✅ COMPLETED
 
 ### Overview
 
-Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows across microservices in **Jaeger UI**. The key innovation is centralizing all OpenTelemetry configuration in `E-commerce.Shared`, reducing code duplication across 6 services.
+Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows across microservices in **Jaeger UI**. The key innovation is centralizing all OpenTelemetry configuration in `E-commerce.Shared`, reducing code duplication across 6 services. **This phase is now complete and deployed.**
 
 ### Architecture
 
@@ -929,51 +964,40 @@ Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows ac
    └─────────────────────────────────────────────┘
 ```
 
-### Implementation Checklist
+### Implementation Checklist ✅ COMPLETED
 
-**Step 1: Update E-commerce.Shared.csproj**
-- Add OpenTelemetry packages (1.8.x) for AspNetCore, Http, SqlClient, Jaeger
+**Step 1: Update E-commerce.Shared.csproj** ✅
+- Added OpenTelemetry packages (1.8.x) for AspNetCore, Http, SqlClient, Jaeger
 
-**Step 2: Create OpenTelemetryExtensions.cs**
-```csharp
-public static class OpenTelemetryExtensions
-{
-    public static IServiceCollection AddEcommerceTracing(
-        this IServiceCollection services,
-        string serviceName,
-        string serviceVersion = "1.0.0",
-        IConfiguration configuration = null)
-    {
-        // Configure all instrumentation automatically
-        // Exports to Jaeger (configurable via appsettings)
-    }
-}
-```
+**Step 2: Create OpenTelemetryExtensions.cs** ✅
+- Created centralized `AddEcommerceTracing()` extension method in [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs)
+- Configures all instrumentation automatically
+- Exports to Jaeger (configurable via appsettings)
 
-**Step 3: Update appsettings.json in each service**
-```json
-{
-  "Jaeger": {
-    "AgentHost": "localhost",
-    "AgentPort": 6831
-  }
-}
-```
+**Step 3: Update appsettings.json in each service** ✅
+- All 6 services updated with Jaeger configuration:
+  - AuthAPI ✅
+  - ProductAPI ✅
+  - CouponAPI ✅
+  - ShoppingCartAPI ✅
+  - EmailAPI ✅
+  - Web MVC ✅
 
-**Step 4: Update Program.cs in all 6 services** (one line each)
-```csharp
-builder.Services.AddEcommerceTracing("ServiceName");
-```
+**Step 4: Update Program.cs in all 6 services** ✅ (one line each)
+- Added `using Ecommerce.Shared.Extensions;` statement
+- Added `builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);`
+- All 6 services now participate in distributed tracing
 
 **Step 5: Start Jaeger locally**
 ```bash
 docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one
 ```
 
-**Step 6: Test with "Cart Checkout" flow**
+**Step 6: Test with "Cart Checkout" flow** ✅
 - Browse Jaeger UI at http://localhost:16686
 - Select service and trace
 - Verify waterfall timing across Web → ShoppingCart → Product → DB
+- Correlation IDs from Phase 3 visible in span tags
 
 ### What Gets Traced Automatically
 
@@ -1068,8 +1092,14 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 
 ---
 
-**Last Updated**: 2025-12-22
-**Version**: 1.0.2
-**Branch**: `feature/LoggingAndTracing` (observability work in progress)
-**Status**: ✅ Deployed to Azure Container Apps (Production)
+**Last Updated**: 2025-12-24
+**Version**: 1.0.3
+**Branch**: `feature/jaeger-implementation` (Phase 4 OpenTelemetry/Jaeger complete)
+**Status**: ✅ Deployed to Azure Container Apps (Production) | ✅ Phase 4 OpenTelemetry/Jaeger Implementation Complete
 **Live URL**: https://web.mangosea-a7508352.eastus.azurecontainerapps.io
+
+### Completed Phases
+- ✅ Phase 1: Security Hardening
+- ✅ Phase 2: Containerization
+- ✅ Phase 3: Correlation ID Middleware & Structured Logging
+- ✅ Phase 4: OpenTelemetry/Jaeger Distributed Tracing
