@@ -4,6 +4,7 @@ using Ecommerce.Services.EmailAPI.Messaging;
 using Ecommerce.Services.EmailAPI.Services;
 using Microsoft.Azure.Amqp;
 using Microsoft.EntityFrameworkCore;
+using Ecommerce.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// OpenTelemetry Distributed Tracing
+builder.Services.AddEcommerceTracing("EmailAPI", configuration: builder.Configuration);
 
 var app = builder.Build();
 

@@ -3,6 +3,7 @@ using E_commerce.Services.AuthAPI.Models;
 using E_commerce.Services.AuthAPI.Service;
 using E_commerce.Services.AuthAPI.Service.IService;
 using Ecommerce.Shared.Middleware;
+using Ecommerce.Shared.Extensions;
 using Ecommerce.MessageBus;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,9 @@ builder.Services.AddScoped<IMessageBus, MessageBus>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// OpenTelemetry Distributed Tracing
+builder.Services.AddEcommerceTracing("AuthAPI", configuration: builder.Configuration);
 
 builder.Services.AddCors(options =>
 {

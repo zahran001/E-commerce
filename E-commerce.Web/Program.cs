@@ -5,6 +5,7 @@ using E_commerce.Web.Services;
 using E_commerce.Web.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Ecommerce.Shared.Middleware;
+using Ecommerce.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,9 @@ builder.Services.Configure<WarmUpConfiguration>(
 
 // Register database warm-up hosted service
 builder.Services.AddHostedService<DatabaseWarmUpHostedService>();
+
+// OpenTelemetry Distributed Tracing
+builder.Services.AddEcommerceTracing("Web", configuration: builder.Configuration);
 
 var app = builder.Build();
 
