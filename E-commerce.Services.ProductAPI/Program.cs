@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using E_commerce.Services.ProductAPI.Extensions;
 using Serilog;
 using Ecommerce.Shared.Middleware;
+using Ecommerce.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +81,9 @@ builder.Services.AddCors(options =>
 builder.AddAppAuthentication();
 
 builder.Services.AddAuthorization();
+
+// OpenTelemetry Distributed Tracing
+builder.Services.AddEcommerceTracing("ProductAPI", configuration: builder.Configuration);
 
 var app = builder.Build();
 

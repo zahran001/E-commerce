@@ -752,7 +752,7 @@ Core requirements:
 
 **2. Click "Browse" tab**
 
-**3. Install these packages (latest 1.8.x versions):**
+**3. Install these packages (latest stable versions):**
 
 | Package | Version | Purpose |
 |---------|---------|---------|
@@ -760,8 +760,10 @@ Core requirements:
 | `OpenTelemetry.Extensions.Hosting` | 1.8.1+ | ASP.NET Core integration |
 | `OpenTelemetry.Instrumentation.AspNetCore` | 1.8.3+ | HTTP request/response tracing |
 | `OpenTelemetry.Instrumentation.Http` | 1.8.1+ | HttpClient call tracing |
-| `OpenTelemetry.Instrumentation.SqlClient` | 1.8.1+ | SQL Server query tracing |
+| `OpenTelemetry.Instrumentation.EntityFrameworkCore` | 1.14-beta+ | EF Core query tracing (handles SQL Server via EF Core) |
 | `OpenTelemetry.Exporter.Jaeger` | 1.5.0+ | Jaeger exporter |
+
+> **About EntityFrameworkCore Instrumentation**: This package is currently in beta (1.14.0-beta.2 is latest as of Dec 2025), but it's production-ready for tracing EF Core queries. Since your application uses EF Core for all database operations, this automatically instruments your SQL Server calls with proper query tracing.
 
 **4. After each install, wait for "Successfully installed" message**
 
@@ -866,11 +868,11 @@ namespace Ecommerce.Shared.Extensions
                             options.RecordException = true;
                         })
 
-                        // 5. Auto-instrument SQL Server (database queries)
+                        // 5. Auto-instrument Entity Framework Core (database queries)
                         // Traces EF Core queries, execution time, SQL text
-                        .AddSqlClientInstrumentation(options =>
+                        .AddEntityFrameworkCoreInstrumentation(options =>
                         {
-                            // Include SQL query text in traces (helps debugging in dev)
+                            // Include raw SQL query text in traces (helps debugging in dev)
                             // In production, set to false to avoid logging PII
                             options.SetDbStatementForText = true;
                             options.RecordException = true;

@@ -11,6 +11,7 @@ using E_commerce.Services.ShoppingCartAPI.Utility;
 using Ecommerce.MessageBus;
 using Serilog;
 using Ecommerce.Shared.Middleware;
+using Ecommerce.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +97,9 @@ builder.Services.AddSwaggerGen(option =>
 builder.AddAppAuthentication();
 
 builder.Services.AddAuthorization();
+
+// OpenTelemetry Distributed Tracing
+builder.Services.AddEcommerceTracing("ShoppingCartAPI", configuration: builder.Configuration);
 
 var app = builder.Build();
 
