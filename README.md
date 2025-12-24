@@ -132,7 +132,7 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 - ✅ **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
 - ✅ **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
 - ✅ **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
-- 📋 **OpenTelemetry/Jaeger**: Planned for distributed tracing with timing analysis
+- 📋 **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
 
 #### Correlation ID Implementation ✅
 
@@ -169,6 +169,38 @@ Result: Complete request timeline across all 6 services
 **Documentation:**
 - [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) - Complete implementation guide with verification checklist
 - [DIAGNOSTIC-LOGGING-GUIDE.md](DIAGNOSTIC-LOGGING-GUIDE.md) - Debugging guide with expected log patterns and root cause analysis
+
+#### OpenTelemetry/Jaeger Integration (Phase 4) 📋
+
+**Centralized Tracing Configuration via E-commerce.Shared:**
+
+A single extension method `AddEcommerceTracing()` configures OpenTelemetry across all 6 services, eliminating code duplication and ensuring consistent behavior.
+
+**Key Components:**
+- [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs) - Centralized tracing configuration
+- Auto-instrumentation for ASP.NET Core (request/response timing)
+- Auto-instrumentation for HttpClient (inter-service call timing)
+- Auto-instrumentation for SQL Client (database query timing)
+- Azure Service Bus message tracing (async flow visibility)
+
+**Usage in any service:**
+```csharp
+// In Program.cs
+builder.Services.AddEcommerceTracing("ServiceName");
+```
+
+**Visualization:**
+- Jaeger UI shows waterfall chart of entire request flow
+- Correlation IDs from Phase 3 link to OpenTelemetry spans
+- Database query timing visible in UI
+- Service-to-Service call latencies tracked
+- Message queue processing delays isolated
+
+**MVP Implementation:**
+- All-on tracing for development (simplicity)
+- SQL statement text visible (for debugging queries)
+- Configurable Jaeger endpoint (localhost:6831 default)
+- 5 API services + Web MVC all participate automatically
 
 ---
 
@@ -846,19 +878,145 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ## 🔮 Future Enhancements
 
-| Priority | Enhancement | Description |
-|----------|-------------|-------------|
-| **High** | OpenTelemetry/Jaeger | Distributed tracing with timing analysis, span visualization, latency bottleneck identification |
-| **High** | CI/CD Pipeline | GitHub Actions for automated build and deployment |
-| **High** | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
-| **High** | Email Integration | SendGrid/Azure Communication Services for actual email sending |
-| **High** | Security Hardening | Rate limiting, input validation, security headers, refresh tokens |
-| **Medium** | API Gateway | NGINX or YARP for centralized routing and rate limiting |
-| **Medium** | Redis Caching | Product catalog and session caching |
-| **Medium** | Database Indexing | Composite indexes for frequent queries |
-| **Medium** | Diagnostic Logging Cleanup | Remove System.Diagnostics.Debug statements from production code after Phase 4 completion |
-| **Low** | Azure Key Vault | Centralized secrets management with Managed Identity |
-| **Low** | Automated Testing | Unit, integration, and E2E tests with xUnit and Playwright |
+| Priority | Phase | Enhancement | Description |
+|----------|-------|-------------|-------------|
+| **In Progress** | Phase 4 | **OpenTelemetry/Jaeger** | ✅ Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
+| **High** | Phase 5 | CI/CD Pipeline | GitHub Actions for automated build and deployment |
+| **High** | Phase 6 | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
+| **High** | Phase 7 | Email Integration | SendGrid/Azure Communication Services for actual email sending |
+| **High** | Phase 8 | Security Hardening | Rate limiting, input validation, security headers, refresh tokens |
+| **Medium** | Phase 9 | API Gateway | NGINX or YARP for centralized routing and rate limiting |
+| **Medium** | Phase 10 | Redis Caching | Product catalog and session caching |
+| **Medium** | Phase 11 | Database Indexing | Composite indexes for frequent queries |
+| **Low** | Phase 12 | Azure Key Vault | Centralized secrets management with Managed Identity |
+| **Low** | Phase 13 | Automated Testing | Unit, integration, and E2E tests with xUnit and Playwright |
+
+---
+
+## 📊 Phase 4 Implementation Strategy
+
+### Overview
+
+Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows across microservices in **Jaeger UI**. The key innovation is centralizing all OpenTelemetry configuration in `E-commerce.Shared`, reducing code duplication across 6 services.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs   │
+│  ├─ AddEcommerceTracing(serviceName)                       │
+│  ├─ Configures: AspNetCore + HttpClient + SqlClient        │
+│  ├─ Exports to: Jaeger (localhost:6831)                    │
+│  └─ Integrates with: CorrelationIdMiddleware (Phase 3)     │
+└─────────────────────────────────────────────────────────────┘
+                           ↑ Used by
+        ┌──────────────────┼──────────────────┐
+        ↓                  ↓                  ↓
+   AuthAPI            ProductAPI         CouponAPI
+        ↓                  ↓                  ↓
+   ┌─────────────────────────────────────────────┐
+   │  All 6 services call:                       │
+   │  builder.Services.AddEcommerceTracing(...)  │
+   │  (Single line of code per service)          │
+   └─────────────────────────────────────────────┘
+        ↓
+   ┌─────────────────────────────────────────────┐
+   │  Jaeger UI (http://localhost:16686)         │
+   │  ├─ Waterfall chart of request flow         │
+   │  ├─ Timing: API → DB → Service Bus → API    │
+   │  ├─ Search by correlation ID                │
+   │  └─ Identify bottlenecks visually           │
+   └─────────────────────────────────────────────┘
+```
+
+### Implementation Checklist
+
+**Step 1: Update E-commerce.Shared.csproj**
+- Add OpenTelemetry packages (1.8.x) for AspNetCore, Http, SqlClient, Jaeger
+
+**Step 2: Create OpenTelemetryExtensions.cs**
+```csharp
+public static class OpenTelemetryExtensions
+{
+    public static IServiceCollection AddEcommerceTracing(
+        this IServiceCollection services,
+        string serviceName,
+        string serviceVersion = "1.0.0",
+        IConfiguration configuration = null)
+    {
+        // Configure all instrumentation automatically
+        // Exports to Jaeger (configurable via appsettings)
+    }
+}
+```
+
+**Step 3: Update appsettings.json in each service**
+```json
+{
+  "Jaeger": {
+    "AgentHost": "localhost",
+    "AgentPort": 6831
+  }
+}
+```
+
+**Step 4: Update Program.cs in all 6 services** (one line each)
+```csharp
+builder.Services.AddEcommerceTracing("ServiceName");
+```
+
+**Step 5: Start Jaeger locally**
+```bash
+docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one
+```
+
+**Step 6: Test with "Cart Checkout" flow**
+- Browse Jaeger UI at http://localhost:16686
+- Select service and trace
+- Verify waterfall timing across Web → ShoppingCart → Product → DB
+
+### What Gets Traced Automatically
+
+| Component | Traced | Details |
+|-----------|--------|---------|
+| **HTTP Requests** | ✅ | Web MVC → API calls (timing, status codes) |
+| **Database Queries** | ✅ | EF Core → SQL Server (query text, execution time) |
+| **Inter-Service Calls** | ✅ | API → API via HttpClient (latency, payload size) |
+| **Service Bus Messages** | ✅ | Publish/consume timing (queue latency isolated) |
+| **Correlation IDs** | ✅ | Linked to spans via activity tags (from Phase 3) |
+
+### MVP Simplifications (vs Full OpenTelemetry)
+
+| Feature | Included | Why |
+|---------|----------|-----|
+| Auto-instrumentation | ✅ | Covers 95% of tracing needs |
+| Jaeger exporter | ✅ | Local UI visualization |
+| Service Bus tracing | ✅ | Async flow visibility (critical gap in Phase 3) |
+| SQL query text | ✅ Dev only | Aids debugging without exposing PII |
+| Sampler configuration | ❌ | Not needed for MVP (all requests traced) |
+| Custom Activity Sources | ❌ | Auto-instrumentation sufficient |
+| Multiple exporters | ❌ | Jaeger only (can add later) |
+| Metrics collection | ❌ | Traces only (metrics in future phase) |
+
+### Verification Test: Cart Checkout Waterfall
+
+**User Action:**
+```
+POST /api/cart/EmailCartRequest
+├─ Correlation ID: 96ebdbee-45fa-4264-a1b8-c1be5759f40d
+├─ Auth Check (5ms)
+├─ ProductAPI Call (20ms)
+├─ CouponAPI Call (10ms)
+├─ Service Bus Publish (50ms)
+└─ EmailAPI Consume (200ms + DB write)
+Total: ~285ms
+```
+
+**In Jaeger UI:**
+- All steps appear as nested spans
+- Each color represents different instrumentation (red=SQL, green=HTTP, blue=messaging)
+- Hover to see exact timings
+- Click to see span tags (correlation_id, product_id, etc.)
 
 ---
 

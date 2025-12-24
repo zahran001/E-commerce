@@ -694,141 +694,590 @@ Core requirements:
 
 ---
 
-## Phase 4: Add OpenTelemetry Tracing
+## Phase 4: Add OpenTelemetry Tracing (Centralized Approach)
 
-> **Goal**: See visual timeline of requests in Jaeger UI
+> **Goal**: See visual timeline of requests in Jaeger UI with **zero code duplication** across 6 services
+>
+> **Key Innovation**: Centralize all OpenTelemetry configuration in `E-commerce.Shared` via a single extension method `AddEcommerceTracing()`
+>
+> **Estimated Time**: 1.5-2 hours
+> **MVP Focus**: Auto-instrumentation only (no samplers, no custom Activity Sources)
 
-### Step 4.1: Add OpenTelemetry NuGet Packages
+### Architecture Overview
 
-**For EACH of the 5 API services** (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI):
-
-**1. Manage NuGet Packages → Browse tab**
-
-**2. Install these packages:**
-   - `OpenTelemetry` (latest 1.7.x)
-   - `OpenTelemetry.Extensions.Hosting` (1.7.x)
-   - `OpenTelemetry.Instrumentation.AspNetCore` (1.7.x)
-   - `OpenTelemetry.Instrumentation.Http` (1.7.x)
-   - `OpenTelemetry.Instrumentation.SqlClient` (1.7.x)
-   - `OpenTelemetry.Exporter.Jaeger` (1.5.x)
-
-**3. Close NuGet Manager**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│        E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs  │
+│                                                                   │
+│  public static AddEcommerceTracing(                              │
+│      this IServiceCollection services,                           │
+│      string serviceName,                                         │
+│      IConfiguration configuration = null)                        │
+│  {                                                                │
+│      // Configures all 4 instrumentation types automatically:   │
+│      // 1. AspNetCore (HTTP request/response)                   │
+│      // 2. HttpClient (inter-service calls)                     │
+│      // 3. SqlClient (database queries)                         │
+│      // 4. Service Bus (async messaging)                        │
+│      //                                                          │
+│      // Exports to: Jaeger (localhost:6831 by default)          │
+│  }                                                                │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+                            ↑ Used by all 6 services
+        ┌───────────────────┼───────────────────┐
+        ↓                   ↓                   ↓
+    AuthAPI           ProductAPI           CouponAPI
+    ShoppingCartAPI       EmailAPI         Web MVC
+        ↓                   ↓                   ↓
+    ┌─────────────────────────────────────────────┐
+    │  In each Program.cs (ONE LINE):             │
+    │  builder.Services.AddEcommerceTracing(...)  │
+    └─────────────────────────────────────────────┘
+                            ↓
+            ┌──────────────────────────────┐
+            │   Jaeger UI (localhost:16686) │
+            │  Waterfall Chart with Timing   │
+            │  (HTTP, SQL, Service Bus)     │
+            └──────────────────────────────┘
+```
 
 ---
 
-### Step 4.2: Configure OpenTelemetry in AuthAPI
+### Step 4.1: Add OpenTelemetry Packages to E-commerce.Shared
 
-**1. Open: `E-commerce.Services.AuthAPI/Program.cs`**
+> **Important**: Add packages to the SHARED project, not individual services. This ensures all 6 services inherit the same versions.
 
-**2. Add using statements at top:**
+**1. In Solution Explorer, right-click `E-commerce.Shared` → Manage NuGet Packages**
+
+**2. Click "Browse" tab**
+
+**3. Install these packages (latest 1.8.x versions):**
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `OpenTelemetry` | 1.8.1+ | Core tracing library |
+| `OpenTelemetry.Extensions.Hosting` | 1.8.1+ | ASP.NET Core integration |
+| `OpenTelemetry.Instrumentation.AspNetCore` | 1.8.3+ | HTTP request/response tracing |
+| `OpenTelemetry.Instrumentation.Http` | 1.8.1+ | HttpClient call tracing |
+| `OpenTelemetry.Instrumentation.SqlClient` | 1.8.1+ | SQL Server query tracing |
+| `OpenTelemetry.Exporter.Jaeger` | 1.5.0+ | Jaeger exporter |
+
+**4. After each install, wait for "Successfully installed" message**
+
+**5. Close NuGet Package Manager**
+
+**6. Verify in `E-commerce.Shared.csproj`:**
+   - Right-click project → Edit Project File
+   - Confirm all 6 packages appear in `<ItemGroup>`
+   - Close the file
+
+✅ **Checkpoint**: E-commerce.Shared.csproj has all 6 OpenTelemetry packages
+
+---
+
+### Step 4.2: Create OpenTelemetryExtensions.cs in E-commerce.Shared
+
+> This is the heart of Phase 4: **one file, used by 6 services, zero duplication**
+
+**1. In Solution Explorer, right-click `E-commerce.Shared/Extensions` → Add → Class**
+
+**2. Name it: `OpenTelemetryExtensions.cs`**
+
+**3. Replace the entire file with this code:**
+
 ```csharp
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using System.Diagnostics;
-```
 
-**3. Find where services are registered (before `var app = builder.Build();`)**
-
-**4. Add this configuration:**
-
-```csharp
-// OpenTelemetry Distributed Tracing
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder =>
+namespace Ecommerce.Shared.Extensions
+{
+    /// <summary>
+    /// Centralized OpenTelemetry configuration for all microservices.
+    ///
+    /// This extension method eliminates code duplication across 6 services (5 APIs + Web MVC)
+    /// by configuring tracing once in the Shared project.
+    ///
+    /// All services automatically get:
+    /// - ASP.NET Core request/response tracing (HTTP timing)
+    /// - HttpClient tracing (inter-service call timing)
+    /// - SQL Server query tracing (database query text and timing)
+    /// - Service Bus message tracing (async flow visibility)
+    /// - Jaeger exporter (visual timeline UI)
+    ///
+    /// Usage in Program.cs:
+    /// builder.Services.AddEcommerceTracing("ServiceName");
+    /// </summary>
+    public static class OpenTelemetryExtensions
     {
-        tracerProviderBuilder
-            .AddSource("AuthAPI")
-            .SetResourceBuilder(
-                ResourceBuilder.CreateDefault()
-                    .AddService("AuthAPI", serviceVersion: "1.0.0")
-                    .AddAttributes(new Dictionary<string, object>
-                    {
-                        ["deployment.environment"] = builder.Environment.EnvironmentName,
-                        ["host.name"] = Environment.MachineName
-                    }))
-            .AddAspNetCoreInstrumentation(options =>
-            {
-                options.RecordException = true;
-                options.Filter = (httpContext) =>
+        /// <summary>
+        /// Add OpenTelemetry distributed tracing to the service.
+        /// </summary>
+        /// <param name="services">Service collection</param>
+        /// <param name="serviceName">Name of the service (e.g., "AuthAPI", "ProductAPI")</param>
+        /// <param name="serviceVersion">Service version (default: "1.0.0")</param>
+        /// <param name="configuration">Configuration object for Jaeger settings (optional)</param>
+        /// <returns>Service collection for chaining</returns>
+        public static IServiceCollection AddEcommerceTracing(
+            this IServiceCollection services,
+            string serviceName,
+            string serviceVersion = "1.0.0",
+            IConfiguration configuration = null)
+        {
+            services.AddOpenTelemetry()
+                .WithTracing(tracerProviderBuilder =>
                 {
-                    // Don't trace health checks or swagger
-                    return !httpContext.Request.Path.StartsWithSegments("/health")
-                        && !httpContext.Request.Path.StartsWithSegments("/swagger");
-                };
-            })
-            .AddHttpClientInstrumentation()
-            .AddSqlClientInstrumentation(options =>
-            {
-                options.SetDbStatementForText = true;
-                options.RecordException = true;
-            })
-            .AddJaegerExporter(options =>
-            {
-                options.AgentHost = "localhost";
-                options.AgentPort = 6831;
-            });
-    });
+                    tracerProviderBuilder
+                        // 1. Identify this service in traces
+                        .AddSource(serviceName)
 
-// Create ActivitySource for manual tracing (if needed later)
-builder.Services.AddSingleton(new ActivitySource("AuthAPI"));
+                        // 2. Set resource attributes (service metadata)
+                        .SetResourceBuilder(
+                            ResourceBuilder.CreateDefault()
+                                .AddService(
+                                    serviceName: serviceName,
+                                    serviceVersion: serviceVersion)
+                                .AddAttributes(new Dictionary<string, object>
+                                {
+                                    ["deployment.environment"] =
+                                        GetEnvironment(configuration),
+                                    ["host.name"] = Environment.MachineName
+                                }))
+
+                        // 3. Auto-instrument ASP.NET Core (HTTP requests)
+                        // Traces incoming HTTP requests, response times, status codes
+                        .AddAspNetCoreInstrumentation(options =>
+                        {
+                            options.RecordException = true;
+
+                            // Filter out noise (health checks, swagger)
+                            options.Filter = (httpContext) =>
+                                !httpContext.Request.Path.StartsWithSegments("/health")
+                                && !httpContext.Request.Path.StartsWithSegments("/swagger")
+                                && !httpContext.Request.Path.StartsWithSegments("/healthz");
+                        })
+
+                        // 4. Auto-instrument HttpClient (inter-service calls)
+                        // Traces calls from ShoppingCartAPI → ProductAPI, etc.
+                        .AddHttpClientInstrumentation(options =>
+                        {
+                            options.RecordException = true;
+                        })
+
+                        // 5. Auto-instrument SQL Server (database queries)
+                        // Traces EF Core queries, execution time, SQL text
+                        .AddSqlClientInstrumentation(options =>
+                        {
+                            // Include SQL query text in traces (helps debugging in dev)
+                            // In production, set to false to avoid logging PII
+                            options.SetDbStatementForText = true;
+                            options.RecordException = true;
+                        })
+
+                        // 6. CRITICAL: Auto-instrument Service Bus
+                        // Enables tracing of message publish/consume (Phase 3 gap!)
+                        // Without this, async flows appear disconnected in Jaeger
+                        .AddSource("Azure.Messaging.ServiceBus")
+
+                        // 7. Export to Jaeger (visual timeline UI)
+                        // Configurable via appsettings.json
+                        .AddJaegerExporter(options =>
+                        {
+                            // Read from configuration if provided, else use defaults
+                            var jaegerSection = configuration?.GetSection("Jaeger");
+
+                            options.AgentHost = jaegerSection?.GetValue<string>("AgentHost")
+                                ?? "localhost";
+                            options.AgentPort = jaegerSection?.GetValue<int>("AgentPort")
+                                ?? 6831;
+                        });
+                });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Helper: Get environment name from configuration or runtime.
+        /// </summary>
+        private static string GetEnvironment(IConfiguration configuration)
+        {
+            // Try to get from ASPNETCORE_ENVIRONMENT
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (!string.IsNullOrEmpty(env))
+                return env;
+
+            // Fallback to Development
+            return "Development";
+        }
+    }
+}
 ```
 
-**5. Save (Ctrl+S)**
+**4. Save the file (Ctrl+S)**
+
+**5. Verify no errors:**
+   - Should see no red squiggly lines
+   - If you see "The type 'OpenTelemetry' could not be found", rebuild the solution (Ctrl+Shift+B)
+
+✅ **Checkpoint**: OpenTelemetryExtensions.cs created in E-commerce.Shared/Extensions
 
 ---
 
-### Step 4.3: Copy OpenTelemetry Config to Other Services
+### Step 4.3: Update appsettings.json in Each Service
 
-**For ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI:**
+> Add Jaeger configuration section so services can override the default host/port if needed
 
-1. Copy the entire OpenTelemetry configuration from AuthAPI's Program.cs
-2. Paste into the target service's Program.cs (before `var app = builder.Build();`)
-3. **Find and replace** all instances of `"AuthAPI"` with the correct service name:
-   - ProductAPI → `"ProductAPI"`
-   - CouponAPI → `"CouponAPI"`
-   - ShoppingCartAPI → `"ShoppingCartAPI"`
-   - EmailAPI → `"EmailAPI"`
+**For EACH service** (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI, Web):
+
+**1. Open the service's `appsettings.json`**
+
+**2. Add this section** (right after the opening `{` or before ConnectionStrings):
+
+```json
+{
+  "Jaeger": {
+    "AgentHost": "localhost",
+    "AgentPort": 6831
+  },
+```
+
+**Example for AuthAPI:**
+```json
+{
+  "Jaeger": {
+    "AgentHost": "localhost",
+    "AgentPort": 6831
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "..."
+  },
+  ...
+}
+```
+
+**3. Save each file (Ctrl+S)**
+
+**Optional**: In production, change `localhost` to your Jaeger hostname (e.g., `jaeger.prod.internal`), but for MVP leave as `localhost`.
+
+✅ **Checkpoint**: All 6 services have Jaeger config in appsettings.json
 
 ---
 
-### Step 4.4: Test OpenTelemetry with Jaeger
+### Step 4.4: Update Program.cs in All 6 Services (One Line Each!)
 
-**1. Rebuild solution (Ctrl+Shift+B)**
+> This is where the magic happens: **one line of code per service**, all configuration in the Shared library
+
+**For EACH service** (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI, Web):
+
+**1. Open the service's `Program.cs`**
+
+**2. Add using statement at the top:**
+```csharp
+using Ecommerce.Shared.Extensions;
+```
+
+**3. Find the section where services are registered** (looks like):
+```csharp
+// Add services to the container
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton(mapper);
+// ... other registrations ...
+```
+
+**4. Add this ONE LINE** (before `var app = builder.Build();`):
+```csharp
+builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);
+```
+
+**Replace `ServiceName` with:**
+- AuthAPI → `"AuthAPI"`
+- ProductAPI → `"ProductAPI"`
+- CouponAPI → `"CouponAPI"`
+- ShoppingCartAPI → `"ShoppingCartAPI"`
+- EmailAPI → `"EmailAPI"`
+- Web MVC → `"Web"`
+
+**Full Example (AuthAPI):**
+```csharp
+// ... existing code ...
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton(mapper);
+builder.AddAppAuthentication();  // JWT config
+
+// ✨ ADD THIS LINE:
+builder.Services.AddEcommerceTracing("AuthAPI", configuration: builder.Configuration);
+
+var app = builder.Build();
+
+// ... rest of Program.cs ...
+```
+
+**5. Save each Program.cs file**
+
+**6. Rebuild solution (Ctrl+Shift+B)**
+   - Should have no errors
+   - If you see "The type 'AddEcommerceTracing' could not be found":
+     - Make sure the using statement is there
+     - Rebuild again
+
+✅ **Checkpoint**: All 6 services have the one-line OpenTelemetry registration
+
+---
+
+### Step 4.5: Start Jaeger Container (If Not Already Running)
+
+> You set this up in Phase 0, but verify it's still running
+
+**1. Open PowerShell**
+
+**2. Check if Jaeger is running:**
+```powershell
+docker ps
+```
+
+**3. If you see `jaeger` in the list, skip to Step 4.6**
+
+**4. If Jaeger is NOT running, start it:**
+```powershell
+docker run -d --name jaeger `
+  -p 6831:6831/udp `
+  -p 16686:16686 `
+  jaegertracing/all-in-one:latest
+```
+
+**5. Verify Jaeger is accessible:**
+   - Open http://localhost:16686 in your browser
+   - You should see the Jaeger UI with "Search" dropdown
+
+✅ **Checkpoint**: Jaeger container is running and accessible
+
+---
+
+### Step 4.6: Test OpenTelemetry Tracing
+
+> Now test the entire system end-to-end
+
+**1. In Visual Studio, set all 6 services as startup projects:**
+   - Right-click Solution → Set Startup Projects
+   - Select "Multiple startup projects"
+   - Set to "Start":
+     - E-commerce.Services.AuthAPI
+     - E-commerce.Services.ProductAPI
+     - E-commerce.Services.CouponAPI
+     - E-commerce.Services.ShoppingCartAPI
+     - Ecommerce.Services.EmailAPI
+     - E-commerce.Web
+   - Click OK
 
 **2. Press F5 to start all services**
 
-**3. Open Web MVC and perform these actions:**
-   - Register a new user
+**3. Wait for all services to start** (watch the Output window for startup messages)
+
+**4. Open Seq dashboard in browser: http://localhost:5341**
+   - Verify logs from all 5 services appear
+   - (This proves logging from Phase 1-3 is working)
+
+**5. Open Jaeger UI in browser: http://localhost:16686**
+
+**6. In "Service" dropdown, select `AuthAPI`**
+
+**7. Click "Find Traces"**
+   - You should see traces listed!
+   - Click on the first trace
+   - You should see a **waterfall timeline** showing:
+     - HTTP request to `/api/auth/...`
+     - SQL query spans (colored differently)
+     - Total request duration
+
+**Example of what you'll see:**
+```
+POST /api/auth/login
+├─ Span: AuthAPI (5ms total)
+│  ├─ Call to database (2ms)
+│  └─ HTTP response (3ms)
+```
+
+**8. Test inter-service call (the payoff!):**
+   - Open Web MVC: https://localhost:7230
+   - Register a user
    - Log in
-   - Browse products
-   - Add product to cart
+   - Browse products (this calls ProductAPI)
+   - Add product to cart (this calls ShoppingCartAPI → ProductAPI + CouponAPI)
 
-**4. Open Jaeger UI: http://localhost:16686**
+**9. In Jaeger, select `ShoppingCartAPI` from Service dropdown**
+   - Find the recent "CartUpsert" or similar trace
+   - **Click on it**
+   - **You should see a WATERFALL showing all steps:**
+     ```
+     POST /api/cart/CartUpsert
+     ├─ ShoppingCartAPI (100ms total)
+     │  ├─ Call to ProductAPI (20ms)
+     │  ├─ Call to CouponAPI (10ms)
+     │  ├─ SQL query (15ms)
+     │  └─ Response (55ms)
+     ```
 
-**5. In "Service" dropdown, select `AuthAPI`**
+**10. Explore the trace details:**
+   - Hover over spans to see exact timings
+   - Click on span tags to see metadata (correlation_id, product_id, etc.)
+   - Red spans = SQL queries
+   - Green spans = HTTP calls
+   - Blue spans = Other operations
 
-**6. Click "Find Traces"**
+✅ **Checkpoint**: Jaeger shows waterfall traces with timing for all services
 
-**7. You should see traces appear! Click on one:**
-   - You'll see a timeline showing:
-     - HTTP request to AuthAPI
-     - SQL query to database
-     - Response time
+---
 
-**8. Try selecting `ShoppingCartAPI` in the Service dropdown:**
-   - Find a trace and click it
+### Step 4.7: Verify Correlation ID Integration
+
+> Confirm that Phase 3 correlation IDs link to Phase 4 OpenTelemetry spans
+
+**1. In Jaeger, click on any trace span**
+
+**2. Look for tags section** (usually on the right)
+
+**3. You should see tags like:**
+   - `correlation_id: 96ebdbee-45fa-4264-a1b8-c1be5759f40d`
+   - `http.method: POST`
+   - `http.target: /api/cart/CartUpsert`
+   - `http.status_code: 200`
+
+**4. Copy the `correlation_id` value**
+
+**5. Open Seq (http://localhost:5341)**
+
+**6. Search Seq by that correlation ID:**
+   - In the search box, type `CorrelationId = "96ebdbee-45fa-4264-a1b8-c1be5759f40d"`
+   - Press Enter
+   - You should see **the same correlation ID** in Seq logs
+
+**Result**: Phase 3 (Seq logs) and Phase 4 (Jaeger traces) are now linked!
+
+✅ **Checkpoint**: Correlation IDs appear in both Seq and Jaeger spans
+
+---
+
+### Step 4.8: Test Service Bus Message Tracing
+
+> This is the critical piece that Phase 3 was missing!
+
+**1. In Web MVC, register a new user:**
+   - Email: `servicebus-test@example.com`
+   - Password: `Test123!`
+
+**2. In Jaeger:**
+   - Select `AuthAPI` from Service dropdown
+   - Find the recent `/api/auth/register` trace
+   - Click on it
+   - You should see spans for:
+     ```
+     POST /api/auth/register
+     ├─ SQL INSERT (user creation)
+     ├─ Service Bus publish (NEW! Phase 4 addition)
+     └─ Response
+     ```
+
+**3. Wait 5 seconds** (for EmailAPI to consume the message)
+
+**4. In Jaeger:**
+   - Select `EmailAPI` from Service dropdown
+   - Find a recent trace
+   - Click on it
+   - You should see a span for consuming the Service Bus message
+   - **The Service Bus span should show latency between publish and consume!**
+
+**5. Compare timings in Seq:**
+   - Open Seq
+   - Search for `servicebus-test@example.com`
    - You should see:
-     - HTTP request from Web to ShoppingCartAPI
-     - HTTP call from ShoppingCartAPI → ProductAPI
-     - HTTP call from ShoppingCartAPI → CouponAPI
-     - SQL queries
-     - Total end-to-end timing
+     ```
+     [AuthAPI] Registration attempt
+     [AuthAPI] Publishing to loguser queue
+     [EmailAPI] Received message from loguser queue  ← timing shows queue delay
+     [EmailAPI] Email processed
+     ```
 
-**9. Explore the visual timeline:**
-   - Hover over bars to see timing
-   - Click "Trace Timeline" to see detailed waterfall
+✅ **Checkpoint**: Service Bus message flow is visible in Jaeger with timing
 
-✅ **Checkpoint**: Jaeger shows visual traces with timing for all services
+---
+
+### What You're Now Seeing in Jaeger
+
+| Component | Before Phase 4 | After Phase 4 |
+|-----------|---|---|
+| HTTP Requests | ❌ Not visible | ✅ Full timeline with duration |
+| Database Queries | ❌ Not visible | ✅ Query text + execution time |
+| Inter-Service Calls | ❌ Not visible | ✅ Call timing + response codes |
+| Service Bus Messages | ❌ Not visible | ✅ Publish/consume timing + queue latency |
+| Correlation IDs | ✅ In Seq logs | ✅ Also in Jaeger span tags |
+
+---
+
+### Troubleshooting
+
+#### Problem: No traces in Jaeger
+
+**Checklist:**
+1. Is Jaeger running? `docker ps` should show `jaeger`
+2. Is http://localhost:16686 accessible?
+3. Did you add the using statement to Program.cs?
+4. Did you rebuild the solution?
+5. Did you pass `configuration: builder.Configuration` to `AddEcommerceTracing`?
+
+**Fix:**
+```powershell
+# Restart Jaeger
+docker restart jaeger
+
+# Rebuild solution in Visual Studio
+Ctrl+Shift+B
+```
+
+---
+
+#### Problem: Traces show but without SQL query text
+
+**Cause**: SQL instrumentation might not be enabled
+
+**Check**: In Seq, do you see SQL query logs from Phase 1-3? If yes, OpenTelemetry SQL should also work.
+
+**Fix**: Ensure `builder.Configuration` is passed to `AddEcommerceTracing()`:
+```csharp
+builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);
+```
+
+---
+
+#### Problem: Service Bus spans don't appear in Jaeger
+
+**Cause**: This is a known limitation of OpenTelemetry + Azure SDK. The tracing might be sending but not appearing.
+
+**Workaround**: For MVP, this is acceptable. Correlation IDs in Seq logs (Phase 3) already show the flow. Phase 4 mainly gives you HTTP and SQL visibility.
+
+**Advanced**: If you need full Service Bus tracing, you can add custom Activity tracking in MessageBus.cs (not covered in MVP).
+
+---
+
+### Success Criteria
+
+Before moving on, verify:
+
+- [ ] All 6 services start without errors
+- [ ] Jaeger UI loads at http://localhost:16686
+- [ ] AuthAPI traces appear in Jaeger
+- [ ] ProductAPI traces appear in Jaeger
+- [ ] ShoppingCartAPI traces show calls to ProductAPI
+- [ ] Waterfall timeline shows accurate timings
+- [ ] Correlation IDs appear in Jaeger span tags
+- [ ] Searching correlation ID in Seq shows matching logs
+- [ ] SQL query text appears in Jaeger spans (Traces tab)
+- [ ] No errors in Visual Studio Output window
 
 ---
 
