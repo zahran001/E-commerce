@@ -66,7 +66,7 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 ### Backend
 - **Framework**: ASP.NET Core 8.0 Web API
 - **ORM**: Entity Framework Core 9.0 with Code-First migrations
-- **Authentication**: ASP.NET Core Identity + JWT Bearer tokens (256-bit HMAC SHA256)
+- **Authentication**: ASP.NET Core Identity + JWT Bearer 8.0.14 tokens (256-bit HMAC SHA256)
 - **Authorization**: Role-based access control (ADMIN, CUSTOMER roles)
 - **Object Mapping**: AutoMapper 13.0.1 for DTO transformations
 
@@ -77,8 +77,14 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 ### Data & Messaging
 - **Database**: Azure SQL Database (Serverless tier, auto-pause enabled)
-- **Message Broker**: Azure Service Bus (Basic SKU with 2 queues)
+- **Message Broker**: Azure Service Bus (Basic SKU with 2 queues, Azure.Messaging.ServiceBus 7.19.0)
 - **Connection Pooling**: EF Core with scoped DbContext lifecycle
+
+### Observability
+- **Structured Logging**: Serilog 10.0.0 with Console, File, and Seq sinks
+- **Distributed Tracing**: OpenTelemetry 1.14.0 with Jaeger exporter 1.5.1
+- **Correlation IDs**: Middleware-based request tracing across all services
+- **Centralized Configuration**: E-commerce.Shared library for observability setup
 
 ### Infrastructure & DevOps
 - **Containerization**: Docker multi-stage builds (optimized images ~220-250 MB)
@@ -89,7 +95,7 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 ### Development Tools
 - **API Documentation**: Swashbuckle/Swagger with bearer token authentication UI
-- **Logging**: ASP.NET Core logging with JSON formatter (Application Insights ready)
+- **Logging**: Serilog with JSON formatting and centralized Seq aggregation (Application Insights ready)
 - **Version Control**: Git with conventional commits
 
 ---
@@ -127,12 +133,12 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 - ✅ **Configuration Management**: Environment-based `appsettings.json` with override patterns
 - ✅ **Clean Architecture**: Separation of concerns (Controllers, Services, Data, Models)
 
-### Observability (In Progress)
-- ✅ **Structured Logging**: Serilog implemented in AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI with Console, File, and Seq sinks
+### Observability (Completed - Phases 3-4) ✅
+- ✅ **Structured Logging**: Serilog 10.0.0 implemented in all 6 services with Console, File, and Seq sinks
 - ✅ **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
 - ✅ **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
 - ✅ **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
-- 📋 **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
+- ✅ **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
 
 #### Correlation ID Implementation ✅
 
@@ -284,6 +290,13 @@ E-commerce/
 ├── Ecommerce.MessageBus/                  # Shared Service Bus Library
 │   ├── MessageBus.cs                      # IMessageBus implementation
 │   └── Azure Service Bus Integration      # Queue publishing logic
+│
+├── E-commerce.Shared/                     # Shared Observability Library
+│   ├── Extensions/                        # Reusable extension methods
+│   │   └── OpenTelemetryExtensions.cs     # AddEcommerceTracing() centralized config
+│   ├── Middleware/                        # HTTP middleware
+│   │   └── CorrelationIdMiddleware.cs     # Request correlation ID logic
+│   └── E-commerce.Shared.csproj           # OpenTelemetry + Serilog packages
 │
 ├── Docs/                                  # Comprehensive Documentation
 │   ├── DEPLOYMENT-PLAN.md                 # Full 7-phase deployment strategy
@@ -441,6 +454,88 @@ ShoppingCartAPI (Checkout)  → Service Bus Queue (emailshoppingcart) → EmailA
 // Forwards to downstream services
 ```
 
+### Observability Configuration
+
+#### Jaeger (Distributed Tracing)
+
+**appsettings.json:**
+```json
+{
+  "Jaeger": {
+    "AgentHost": "localhost",
+    "AgentPort": 6831
+  }
+}
+```
+
+**Program.cs (All 6 services):**
+```csharp
+using Ecommerce.Shared.Extensions;
+
+builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);
+```
+
+**Tracing Coverage:**
+- HTTP requests (Web MVC → APIs)
+- Database queries (EF Core → SQL Server)
+- Inter-service calls (API → API via HttpClient)
+- Service Bus messages (publish/consume timing)
+- Correlation IDs (linked to spans via activity tags)
+
+#### Serilog (Structured Logging)
+
+**appsettings.json:**
+```json
+{
+  "Serilog": {
+    "Using": ["Serilog.Sinks.Console", "Serilog.Sinks.File", "Serilog.Sinks.Seq"],
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.AspNetCore": "Warning",
+        "Microsoft.EntityFrameworkCore.Database.Command": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} | {Message:lj}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/[service]api-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 7,
+          "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} | {CorrelationId} | {Message:lj}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": {
+          "serverUrl": "http://localhost:5341"
+        }
+      }
+    ],
+    "Enrich": ["FromLogContext", "WithMachineName", "WithThreadId"]
+  }
+}
+```
+
+**Serilog Sinks:**
+- **Console**: Color-coded, real-time output during development
+- **File**: Rolling daily logs in `logs/[service]api-YYYYMMDD.log` (7-day retention)
+- **Seq**: Centralized structured logging aggregation at `http://localhost:5341`
+
+**Correlation ID in Logs:**
+- Automatically enriched by CorrelationIdMiddleware
+- Includes correlation ID in all log entries for end-to-end tracing
+- Search by correlation ID in Seq to see all requests across 6 services
+
 ### Container Apps Deployment Configuration
 
 **Service Resource Allocation:**
@@ -523,6 +618,20 @@ ApiSettings__Audience=e-commerce-client
 - **Azure CLI** (for cloud deployment)
 
 ### Local Development Setup
+
+#### 0. Start Observability Tools (Optional but Recommended)
+
+```bash
+# Start Seq for centralized log aggregation
+docker run -d -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
+
+# Start Jaeger for distributed tracing
+docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
+```
+
+**Access URLs:**
+- Seq UI: http://localhost:5341 - Browse and search all logs with correlation IDs
+- Jaeger UI: http://localhost:16686 - Visualize request flows across services
 
 #### 1. Clone Repository
 
@@ -615,6 +724,9 @@ docker-compose down
 - **Product API Swagger**: https://localhost:7000/swagger
 - **Coupon API Swagger**: https://localhost:7001/swagger
 - **Shopping Cart API Swagger**: https://localhost:7003/swagger
+- **Email API Swagger**: https://localhost:7298/swagger
+- **Seq UI (Logs)**: http://localhost:5341
+- **Jaeger UI (Traces)**: http://localhost:16686
 
 ### Testing the Application
 
@@ -772,6 +884,44 @@ docker-compose logs -f
 # Stop services
 docker-compose down
 ```
+
+#### Docker Compose Configuration Details
+
+**Services Defined:**
+- All 6 microservices with proper dependency ordering
+- Port mappings: 7000, 7001, 7002, 7003, 7298, 7230
+- Environment variable overrides for all Azure configuration
+
+**Example Service Definition:**
+```yaml
+authapi:
+  image: ecommerce/authapi:latest
+  build:
+    context: .
+    dockerfile: E-commerce.Services.AuthAPI/Dockerfile
+  ports:
+    - "7002:8080"
+  environment:
+    - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=E-commerce_Auth;Trusted_Connection=True;TrustServerCertificate=True
+    - ServiceBusConnectionString=${ServiceBusConnectionString}
+    - ApiSettings__Secret=${JWT_SECRET}
+    - Jaeger__AgentHost=host.docker.internal
+    - Jaeger__AgentPort=6831
+  depends_on:
+    - productapi
+    - couponapi
+```
+
+**SQL Server Connection Pattern:**
+- Uses `host.docker.internal` to connect to SQL Server running on the host machine
+- Alternative: Use SQL Server container (requires volume mounts for database persistence)
+
+**Environment Variables:**
+- Service URLs: `ServiceUrls__ProductAPI=http://productapi` (internal DNS within docker-compose)
+- Database: `ConnectionStrings__DefaultConnection=Server=host.docker.internal;...` (points to host)
+- Service Bus: `ServiceBusConnectionString=Endpoint=sb://...` (from Azure or User Secrets)
+- JWT: `ApiSettings__Secret` (32+ character development secret)
+- Observability: `Jaeger__AgentHost=host.docker.internal` (Jaeger running on host)
 
 ### Push to Azure Container Registry
 
@@ -1093,13 +1243,13 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 ---
 
 **Last Updated**: 2025-12-24
-**Version**: 1.0.3
-**Branch**: `feature/jaeger-implementation` (Phase 4 OpenTelemetry/Jaeger complete)
+**Version**: 1.0.4 (with E-commerce.Shared observability library)
+**Branch**: `master` (Phases 3-4 merged from feature branches)
 **Status**: ✅ Deployed to Azure Container Apps (Production) | ✅ Phase 4 OpenTelemetry/Jaeger Implementation Complete
 **Live URL**: https://web.mangosea-a7508352.eastus.azurecontainerapps.io
 
 ### Completed Phases
 - ✅ Phase 1: Security Hardening
 - ✅ Phase 2: Containerization
-- ✅ Phase 3: Correlation ID Middleware & Structured Logging
-- ✅ Phase 4: OpenTelemetry/Jaeger Distributed Tracing
+- ✅ Phase 3: Correlation ID Middleware & Structured Logging (Serilog)
+- ✅ Phase 4: OpenTelemetry/Jaeger Distributed Tracing (Centralized in E-commerce.Shared)
