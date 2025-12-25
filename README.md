@@ -7,22 +7,23 @@ A **production-ready**, **cloud-native** e-commerce platform built with microser
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)](https://www.docker.com/)
 [![Deployment](https://img.shields.io/badge/Deployment-Live%20on%20Azure-success)](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
-> 🚀 **LIVE DEPLOYMENT:** This application is currently running in production on Azure Container Apps!
+> **LIVE DEPLOYMENT:** This application is currently running in production on Azure Container Apps.
 >
-> 👉 **Try it now:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
+> **Live Demo:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 >
-> ✅ **6 microservices** running • ✅ **5 SQL databases** deployed • ✅ **~$9/month** cost-optimized
+> **Production Status:** 6 microservices running | 5 SQL databases deployed | ~$9/month cost-optimized
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 This full-stack e-commerce application showcases enterprise-grade architectural patterns including **microservices**, **event-driven design**, **containerization**, and **cloud-native deployment**. Built to demonstrate proficiency in distributed systems, API design, and modern DevOps practices.
 
 ### Live Demo
-🚀 **Application:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
-📊 **Deployment Status:** ✅ **Live on Azure Container Apps**
+**Application:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
+
+**Deployment Status:** Live on Azure Container Apps
 - **6 Microservices Running** (ProductAPI, CouponAPI, AuthAPI, ShoppingCartAPI, EmailAPI, Web MVC)
 - **5 Azure SQL Databases** (Serverless tier with auto-pause)
 - **2 Service Bus Queues** (User registration, Cart emails)
@@ -32,16 +33,16 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 | Resource | Link | Status |
 |----------|------|--------|
-| 🌐 **Live Application** | [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io) | 🟢 Running |
-| 📦 **Container Registry** | [Azure Portal - ecommerceacr](https://portal.azure.com) | 6 images stored |
-| 🗄️ **SQL Server** | `ecommerce-sql-server-prod.database.windows.net` | 5 databases |
-| 📨 **Service Bus** | `ecommerceweb.servicebus.windows.net` | 2 queues active |
-| 📚 **Documentation** | [Deployment Guide](Docs/PUSH-TO-PRODUCTION.md) | Complete |
-| 📊 **Deployment Progress** | [Phase 4 Tracker](Docs/PHASE4-PROGRESS.md) | ✅ Completed |
+| **Live Application** | [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io) | Running |
+| **Container Registry** | [Azure Portal - ecommerceacr](https://portal.azure.com) | 6 images stored |
+| **SQL Server** | `ecommerce-sql-server-prod.database.windows.net` | 5 databases |
+| **Service Bus** | `ecommerceweb.servicebus.windows.net` | 2 queues active |
+| **Documentation** | [Deployment Guide](Docs/PUSH-TO-PRODUCTION.md) | Complete |
+| **Deployment Progress** | [Phase 4 Tracker](Docs/PHASE4-PROGRESS.md) | Completed |
 
 ---
 
-## 🏗️ Architecture Highlights
+## Architecture Highlights
 
 ### Microservices Architecture
 - **6 Independent Microservices**: Auth, Product, Coupon, ShoppingCart, Email, Web (MVC Frontend)
@@ -61,7 +62,7 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 ---
 
-## 💻 Technology Stack
+## Technology Stack
 
 ### Backend
 - **Framework**: ASP.NET Core 8.0 Web API
@@ -100,9 +101,9 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 
 ---
 
-## 🚀 Key Features & Technical Achievements
+## Key Features & Technical Achievements
 
-### ✅ Deployment Achievements
+### Deployment Achievements
 - **Production Deployment Complete**: Successfully deployed 6 microservices to Azure Container Apps (November 2025)
 - **All Services Running**: 100% uptime since deployment with health checks monitoring all containers
 - **Zero-Downtime Deployments**: Container Apps configured for rolling updates without service interruption
@@ -112,35 +113,35 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 - **Public HTTPS Endpoint**: Web application accessible at [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
 ### Security
-- ✅ **JWT-based Authentication**: Secure token generation with configurable expiration (7 days default)
-- ✅ **Role-Based Authorization**: Fine-grained access control on API endpoints
-- ✅ **Secrets Externalization**: Zero hardcoded credentials (User Secrets + Key Vault ready)
-- ✅ **HTTPS Enforcement**: TLS 1.2+ with managed SSL certificates in Azure
-- ✅ **CORS Configuration**: Secure cross-origin resource sharing policies
-- ✅ **SQL Injection Prevention**: Parameterized queries via EF Core
+- **JWT-based Authentication**: Secure token generation with configurable expiration (7 days default)
+- **Role-Based Authorization**: Fine-grained access control on API endpoints
+- **Secrets Externalization**: Zero hardcoded credentials (User Secrets + Key Vault ready)
+- **HTTPS Enforcement**: TLS 1.2+ with managed SSL certificates in Azure
+- **CORS Configuration**: Secure cross-origin resource sharing policies
+- **SQL Injection Prevention**: Parameterized queries via EF Core
 
 ### Scalability & Resilience
-- ✅ **Horizontal Scaling**: Stateless services with auto-scaling capabilities (Container Apps)
-- ✅ **Database Auto-Pause**: Serverless SQL with automatic pause after 1-hour idle
-- ✅ **Message Queue Buffering**: Decouples services to handle load spikes
-- ✅ **Health Check Endpoints**: Automatic container restart on failure
-- ✅ **Retry Patterns Ready**: HTTP client configured for resilience (Polly integration ready)
+- **Horizontal Scaling**: Stateless services with auto-scaling capabilities (Container Apps)
+- **Database Auto-Pause**: Serverless SQL with automatic pause after 1-hour idle
+- **Message Queue Buffering**: Decouples services to handle load spikes
+- **Health Check Endpoints**: Automatic container restart on failure
+- **Retry Patterns Ready**: HTTP client configured for resilience (Polly integration ready)
 
 ### Development Best Practices
-- ✅ **Standardized Response Pattern**: `ResponseDto` wrapper for consistent API contracts
-- ✅ **Automatic Migrations**: EF Core migrations auto-apply in development (manual in production)
-- ✅ **Dependency Injection**: Constructor injection with scoped/singleton lifecycle management
-- ✅ **Configuration Management**: Environment-based `appsettings.json` with override patterns
-- ✅ **Clean Architecture**: Separation of concerns (Controllers, Services, Data, Models)
+- **Standardized Response Pattern**: `ResponseDto` wrapper for consistent API contracts
+- **Automatic Migrations**: EF Core migrations auto-apply in development (manual in production)
+- **Dependency Injection**: Constructor injection with scoped/singleton lifecycle management
+- **Configuration Management**: Environment-based `appsettings.json` with override patterns
+- **Clean Architecture**: Separation of concerns (Controllers, Services, Data, Models)
 
-### Observability (Completed - Phases 3-4) ✅
-- ✅ **Structured Logging**: Serilog 10.0.0 implemented in all 6 services with Console, File, and Seq sinks
-- ✅ **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
-- ✅ **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
-- ✅ **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
-- ✅ **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
+### Observability (Completed - Phases 3-4)
+- **Structured Logging**: Serilog 10.0.0 implemented in all 6 services with Console, File, and Seq sinks
+- **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
+- **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
+- **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
+- **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
 
-#### Correlation ID Implementation ✅
+#### Correlation ID Implementation
 
 **Complete request tracing across all 6 microservices with unified correlation IDs:**
 
@@ -176,19 +177,19 @@ Result: Complete request timeline across all 6 services
 - [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) - Complete implementation guide with verification checklist
 - [DIAGNOSTIC-LOGGING-GUIDE.md](DIAGNOSTIC-LOGGING-GUIDE.md) - Debugging guide with expected log patterns and root cause analysis
 
-#### OpenTelemetry/Jaeger Integration (Phase 4) ✅
+#### OpenTelemetry/Jaeger Integration (Phase 4)
 
 **Centralized Tracing Configuration via E-commerce.Shared:**
 
 A single extension method `AddEcommerceTracing()` configures OpenTelemetry across all 6 services, eliminating code duplication and ensuring consistent behavior.
 
 **Completed Implementation:**
-- [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs) - Centralized tracing configuration ✅
-- Auto-instrumentation for ASP.NET Core (request/response timing) ✅
-- Auto-instrumentation for HttpClient (inter-service call timing) ✅
-- Auto-instrumentation for SQL Client (database query timing) ✅
-- Azure Service Bus message tracing (async flow visibility) ✅
-- Jaeger configuration in all 6 services (appsettings.json + Program.cs) ✅
+- [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs) - Centralized tracing configuration
+- Auto-instrumentation for ASP.NET Core (request/response timing)
+- Auto-instrumentation for HttpClient (inter-service call timing)
+- Auto-instrumentation for SQL Client (database query timing)
+- Azure Service Bus message tracing (async flow visibility)
+- Jaeger configuration in all 6 services (appsettings.json + Program.cs)
 
 **Integration in all 6 services:**
 ```csharp
@@ -217,11 +218,11 @@ builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Confi
 **Tracing Coverage:**
 | Component | Status | Details |
 |-----------|--------|---------|
-| **HTTP Requests** | ✅ | All Web MVC and API calls traced |
-| **Database Queries** | ✅ | EF Core SQL Server queries with timing |
-| **Inter-Service Calls** | ✅ | HttpClient calls between APIs |
-| **Service Bus Messages** | ✅ | Publish/consume timing tracked |
-| **Correlation IDs** | ✅ | Linked to spans via activity tags |
+| **HTTP Requests** | Enabled | All Web MVC and API calls traced |
+| **Database Queries** | Enabled | EF Core SQL Server queries with timing |
+| **Inter-Service Calls** | Enabled | HttpClient calls between APIs |
+| **Service Bus Messages** | Enabled | Publish/consume timing tracked |
+| **Correlation IDs** | Enabled | Linked to spans via activity tags |
 
 **Getting Started with Jaeger (Local Development):**
 ```bash
@@ -236,16 +237,16 @@ docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
 ```
 
 **Services Instrumented:**
-- ✅ AuthAPI - Login, registration, JWT generation, user lookup
-- ✅ ProductAPI - Product CRUD, catalog queries
-- ✅ CouponAPI - Coupon validation, discount lookups
-- ✅ ShoppingCartAPI - Cart operations, calls to Product/Coupon APIs
-- ✅ EmailAPI - Service Bus message consumption, email logging
-- ✅ Web MVC - HTTP requests to all downstream APIs
+- AuthAPI - Login, registration, JWT generation, user lookup
+- ProductAPI - Product CRUD, catalog queries
+- CouponAPI - Coupon validation, discount lookups
+- ShoppingCartAPI - Cart operations, calls to Product/Coupon APIs
+- EmailAPI - Service Bus message consumption, email logging
+- Web MVC - HTTP requests to all downstream APIs
 
 ---
 
-## 📁 Solution Structure
+## Solution Structure
 
 ```
 E-commerce/
@@ -382,7 +383,7 @@ E-commerce/
 
 ---
 
-## 🔧 Technical Deep Dive
+## Technical Deep Dive
 
 ### Microservices Communication Flow
 
@@ -584,7 +585,7 @@ ApiSettings__Audience=e-commerce-client
 
 ---
 
-## 📊 Cost Analysis
+## Cost Analysis
 
 ### Monthly Azure Costs (Production)
 
@@ -606,7 +607,7 @@ ApiSettings__Audience=e-commerce-client
 
 ---
 
-## 🚦 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -740,7 +741,7 @@ docker-compose down
 
 ---
 
-## 📖 API Endpoints Reference
+## API Endpoints Reference
 
 ### AuthAPI (`https://localhost:7002`)
 
@@ -858,7 +859,7 @@ docker-compose down
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Build All Images
 
@@ -929,7 +930,7 @@ See [BUILD_AND_DEPLOY.md](BUILD_AND_DEPLOY.md) for complete Azure deployment ins
 
 ---
 
-## ☁️ Azure Deployment
+## Azure Deployment
 
 ### Quick Deployment Guide
 
@@ -957,12 +958,12 @@ Full deployment instructions available in [PUSH-TO-PRODUCTION.md](PUSH-TO-PRODUC
 **Deployed Services:**
 | Service | Status | FQDN | Ingress |
 |---------|--------|------|---------|
-| **Web MVC** | 🟢 Running | `web.mangosea-a7508352.eastus.azurecontainerapps.io` | External (Public) |
-| **ProductAPI** | 🟢 Running | `productapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
-| **CouponAPI** | 🟢 Running | `couponapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
-| **AuthAPI** | 🟢 Running | `authapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
-| **ShoppingCartAPI** | 🟢 Running | `shoppingcartapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
-| **EmailAPI** | 🟢 Running | `emailapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
+| **Web MVC** | Running | `web.mangosea-a7508352.eastus.azurecontainerapps.io` | External (Public) |
+| **ProductAPI** | Running | `productapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
+| **CouponAPI** | Running | `couponapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
+| **AuthAPI** | Running | `authapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
+| **ShoppingCartAPI** | Running | `shoppingcartapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
+| **EmailAPI** | Running | `emailapi.internal.mangosea-a7508352.eastus.azurecontainerapps.io` | Internal Only |
 
 **Infrastructure Resources:**
 - **SQL Server:** `ecommerce-sql-server-prod.database.windows.net`
@@ -1032,10 +1033,10 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 ### Production Deployment Metrics
 
 **Deployment Timeline:**
-- **Phase 1** (Security Hardening): ~45 minutes ✅
-- **Phase 2** (Containerization): ~1.5 hours ✅
-- **Phase 3-Lite** (Health Checks): ~15 minutes ✅
-- **Phase 4** (Azure Infrastructure): ~2 hours ✅
+- **Phase 1** (Security Hardening): ~45 minutes (Completed)
+- **Phase 2** (Containerization): ~1.5 hours (Completed)
+- **Phase 3-Lite** (Health Checks): ~15 minutes (Completed)
+- **Phase 4** (Azure Infrastructure): ~2 hours (Completed)
 - **Total Time:** ~4.5 hours from scratch to production
 
 **Infrastructure Details:**
@@ -1061,11 +1062,11 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ---
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 | Priority | Phase | Enhancement | Description |
 |----------|-------|-------------|-------------|
-| **Completed** | Phase 4 | **OpenTelemetry/Jaeger** | ✅ Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
+| **Completed** | Phase 4 | **OpenTelemetry/Jaeger** | Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
 | **High** | Phase 5 | CI/CD Pipeline | GitHub Actions for automated build and deployment |
 | **High** | Phase 6 | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
 | **High** | Phase 7 | Email Integration | SendGrid/Azure Communication Services for actual email sending |
@@ -1078,7 +1079,7 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ---
 
-## 📊 Phase 4 Implementation Strategy ✅ COMPLETED
+## Phase 4 Implementation Strategy - COMPLETED
 
 ### Overview
 
@@ -1114,26 +1115,26 @@ Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows ac
    └─────────────────────────────────────────────┘
 ```
 
-### Implementation Checklist ✅ COMPLETED
+### Implementation Checklist - COMPLETED
 
-**Step 1: Update E-commerce.Shared.csproj** ✅
+**Step 1: Update E-commerce.Shared.csproj** (Completed)
 - Added OpenTelemetry packages (1.8.x) for AspNetCore, Http, SqlClient, Jaeger
 
-**Step 2: Create OpenTelemetryExtensions.cs** ✅
+**Step 2: Create OpenTelemetryExtensions.cs** (Completed)
 - Created centralized `AddEcommerceTracing()` extension method in [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs)
 - Configures all instrumentation automatically
 - Exports to Jaeger (configurable via appsettings)
 
-**Step 3: Update appsettings.json in each service** ✅
+**Step 3: Update appsettings.json in each service** (Completed)
 - All 6 services updated with Jaeger configuration:
-  - AuthAPI ✅
-  - ProductAPI ✅
-  - CouponAPI ✅
-  - ShoppingCartAPI ✅
-  - EmailAPI ✅
-  - Web MVC ✅
+  - AuthAPI (Completed)
+  - ProductAPI (Completed)
+  - CouponAPI (Completed)
+  - ShoppingCartAPI (Completed)
+  - EmailAPI (Completed)
+  - Web MVC (Completed)
 
-**Step 4: Update Program.cs in all 6 services** ✅ (one line each)
+**Step 4: Update Program.cs in all 6 services** (Completed)
 - Added `using Ecommerce.Shared.Extensions;` statement
 - Added `builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);`
 - All 6 services now participate in distributed tracing
@@ -1143,7 +1144,7 @@ Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows ac
 docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one
 ```
 
-**Step 6: Test with "Cart Checkout" flow** ✅
+**Step 6: Test with "Cart Checkout" flow** (Completed)
 - Browse Jaeger UI at http://localhost:16686
 - Select service and trace
 - Verify waterfall timing across Web → ShoppingCart → Product → DB
@@ -1153,20 +1154,20 @@ docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one
 
 | Component | Traced | Details |
 |-----------|--------|---------|
-| **HTTP Requests** | ✅ | Web MVC → API calls (timing, status codes) |
-| **Database Queries** | ✅ | EF Core → SQL Server (query text, execution time) |
-| **Inter-Service Calls** | ✅ | API → API via HttpClient (latency, payload size) |
-| **Service Bus Messages** | ✅ | Publish/consume timing (queue latency isolated) |
-| **Correlation IDs** | ✅ | Linked to spans via activity tags (from Phase 3) |
+| **HTTP Requests** | Enabled | Web MVC → API calls (timing, status codes) |
+| **Database Queries** | Enabled | EF Core → SQL Server (query text, execution time) |
+| **Inter-Service Calls** | Enabled | API → API via HttpClient (latency, payload size) |
+| **Service Bus Messages** | Enabled | Publish/consume timing (queue latency isolated) |
+| **Correlation IDs** | Enabled | Linked to spans via activity tags (from Phase 3) |
 
 ### MVP Simplifications (vs Full OpenTelemetry)
 
 | Feature | Included | Why |
 |---------|----------|-----|
-| Auto-instrumentation | ✅ | Covers 95% of tracing needs |
-| Jaeger exporter | ✅ | Local UI visualization |
-| Service Bus tracing | ✅ | Async flow visibility (critical gap in Phase 3) |
-| SQL query text | ✅ Dev only | Aids debugging without exposing PII |
+| Auto-instrumentation | Yes | Covers 95% of tracing needs |
+| Jaeger exporter | Yes | Local UI visualization |
+| Service Bus tracing | Yes | Async flow visibility (critical gap in Phase 3) |
+| SQL query text | Yes (Dev only) | Aids debugging without exposing PII |
 | Sampler configuration | ❌ | Not needed for MVP (all requests traced) |
 | Custom Activity Sources | ❌ | Auto-instrumentation sufficient |
 | Multiple exporters | ❌ | Jaeger only (can add later) |
@@ -1194,7 +1195,7 @@ Total: ~285ms
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### Project Documentation
 - [DEPLOYMENT-PLAN.md](Docs/DEPLOYMENT-PLAN.md) - Complete 7-phase deployment strategy
@@ -1235,7 +1236,7 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with guidance from Microsoft's [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainers) reference architecture
 - Inspired by microservices patterns from [microservices.io](https://microservices.io/)
@@ -1245,11 +1246,11 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 **Last Updated**: 2025-12-24
 **Version**: 1.0.4 (with E-commerce.Shared observability library)
 **Branch**: `master` (Phases 3-4 merged from feature branches)
-**Status**: ✅ Deployed to Azure Container Apps (Production) | ✅ Phase 4 OpenTelemetry/Jaeger Implementation Complete
+**Status**: Deployed to Azure Container Apps (Production) | Phase 4 OpenTelemetry/Jaeger Implementation Complete
 **Live URL**: https://web.mangosea-a7508352.eastus.azurecontainerapps.io
 
 ### Completed Phases
-- ✅ Phase 1: Security Hardening
-- ✅ Phase 2: Containerization
-- ✅ Phase 3: Correlation ID Middleware & Structured Logging (Serilog)
-- ✅ Phase 4: OpenTelemetry/Jaeger Distributed Tracing (Centralized in E-commerce.Shared)
+- Phase 1: Security Hardening
+- Phase 2: Containerization
+- Phase 3: Correlation ID Middleware & Structured Logging (Serilog)
+- Phase 4: OpenTelemetry/Jaeger Distributed Tracing (Centralized in E-commerce.Shared)
