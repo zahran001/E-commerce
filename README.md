@@ -29,17 +29,6 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 - **2 Service Bus Queues** (User registration, Cart emails)
 - **Environment:** Azure Container Apps (East US region)
 
-### Quick Access Links
-
-| Resource | Link | Status |
-|----------|------|--------|
-| **Live Application** | [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io) | Running |
-| **Container Registry** | [Azure Portal - ecommerceacr](https://portal.azure.com) | 6 images stored |
-| **SQL Server** | `ecommerce-sql-server-prod.database.windows.net` | 5 databases |
-| **Service Bus** | `ecommerceweb.servicebus.windows.net` | 2 queues active |
-| **Documentation** | [Deployment Guide](Docs/PUSH-TO-PRODUCTION.md) | Complete |
-| **Deployment Progress** | [Phase 4 Tracker](Docs/PHASE4-PROGRESS.md) | Completed |
-
 ---
 
 ## Architecture Highlights
@@ -134,12 +123,12 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 - **Configuration Management**: Environment-based `appsettings.json` with override patterns
 - **Clean Architecture**: Separation of concerns (Controllers, Services, Data, Models)
 
-### Observability (Completed - Phases 3-4)
+### Observability
 - **Structured Logging**: Serilog 10.0.0 implemented in all 6 services with Console, File, and Seq sinks
 - **EmailAPI Logging**: Serilog integration with message enrichment from Service Bus
 - **Correlation ID Middleware**: Complete implementation with request tracing across all 6 services
 - **Health Check Framework**: ASP.NET Core Health Checks with database connectivity validation
-- **OpenTelemetry/Jaeger** (Phase 4): Distributed tracing via centralized E-commerce.Shared extension
+- **OpenTelemetry/Jaeger**: Distributed tracing via centralized E-commerce.Shared extension
 
 #### Correlation ID Implementation
 
@@ -173,11 +162,7 @@ Result: Complete request timeline across all 6 services
 - [MessageBus.cs](Ecommerce.MessageBus/MessageBus.cs) - Embeds in Service Bus messages
 - [AzureServiceBusConsumer.cs](Ecommerce.Services.EmailAPI/Messaging/AzureServiceBusConsumer.cs) - Reads from messages for consumer logging
 
-**Documentation:**
-- [PHASE3-CORRELATION-ID-IMPLEMENTATION.md](PHASE3-CORRELATION-ID-IMPLEMENTATION.md) - Complete implementation guide with verification checklist
-- [DIAGNOSTIC-LOGGING-GUIDE.md](DIAGNOSTIC-LOGGING-GUIDE.md) - Debugging guide with expected log patterns and root cause analysis
-
-#### OpenTelemetry/Jaeger Integration (Phase 4)
+#### OpenTelemetry/Jaeger Integration
 
 **Centralized Tracing Configuration via E-commerce.Shared:**
 
@@ -300,11 +285,7 @@ E-commerce/
 │   └── E-commerce.Shared.csproj           # OpenTelemetry + Serilog packages
 │
 ├── Docs/                                  # Comprehensive Documentation
-│   ├── DEPLOYMENT-PLAN.md                 # Full 7-phase deployment strategy
-│   ├── PHASE4-PROGRESS.md                 # Azure deployment progress tracker
-│   ├── PUSH-TO-PRODUCTION.md              # Quick deployment guide
-│   ├── Sensitive/                         # Sensitive deployment guides
-│   └── Archive/                           # Historical documentation
+│   ├── Deployment guides and progress tracking
 │
 ├── scripts/                               # Automation Scripts
 │   ├── Prod/                              # Production deployment scripts
@@ -316,10 +297,7 @@ E-commerce/
 │   └── Archive/                           # Older/unused scripts
 │
 ├── docker-compose.yml                     # Local container orchestration
-├── BUILD_AND_DEPLOY.md                    # Docker build instructions
 ├── CLAUDE.md                              # AI assistant context & architecture
-├── OBSERVABILITY-IMPLEMENTATION-GUIDE.md  # Serilog & tracing setup guide
-├── PHASE3-CORRELATION-ID-IMPLEMENTATION.md # Correlation ID implementation plan
 └── README.md                              # This file
 ```
 
@@ -364,7 +342,6 @@ E-commerce/
 - Configured **Service Bus retry policies** with exponential backoff for transient failure handling
 
 ### Performance & Scalability
-- Achieved **API response times <500ms (p95)** in production through efficient EF Core queries and optimized database connections
 - Configured **HTTP client resilience patterns** with retry, circuit breaker, and timeout policies (Polly integration ready)
 - Implemented **stateless service design** enabling horizontal scaling across Container Apps with internal load balancing and auto-scaling based on HTTP traffic
 - Optimized **Docker image layers** reducing build times by 40% through multi-stage builds and layer caching, deploying 6 images (~220-250 MB each) to Azure Container Registry
@@ -620,19 +597,23 @@ ApiSettings__Audience=e-commerce-client
 
 ### Local Development Setup
 
-#### 0. Start Observability Tools (Optional but Recommended)
+#### 0. Prerequisites Check
 
+Before starting, ensure you have:
+- SQL Server 2022 running locally (or ready to accept connections on `localhost`)
+- .NET 8 SDK installed
+- Docker Desktop running (for observability tools and optional docker-compose)
+
+For **SQL Server setup** (if not already installed):
 ```bash
-# Start Seq for centralized log aggregation
-docker run -d -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
-
-# Start Jaeger for distributed tracing
-docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
+# Using Docker SQL Server
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourPassword123!" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-**Access URLs:**
-- Seq UI: http://localhost:5341 - Browse and search all logs with correlation IDs
-- Jaeger UI: http://localhost:16686 - Visualize request flows across services
+For **Azure Service Bus** (required for EmailAPI):
+- Create a free Azure account or use existing namespace
+- Get connection string from Azure Portal
+- Keep it ready for step 2
 
 #### 1. Clone Repository
 
@@ -641,51 +622,79 @@ git clone https://github.com/zahran001/E-commerce.git
 cd E-commerce
 ```
 
-#### 2. Configure Secrets
+#### 2. Configure Secrets (Required)
 
-Manually configure User Secrets for each service:
+Configure User Secrets for **each of the 5 services** (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI).
 
+**For AuthAPI:**
 ```bash
 cd E-commerce.Services.AuthAPI
 dotnet user-secrets init
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=E-commerce_Auth;Trusted_Connection=True;TrustServerCertificate=True"
-dotnet user-secrets set "ServiceBusConnectionString" "Endpoint=sb://your-namespace.servicebus.windows.net/;..."
-dotnet user-secrets set "ApiSettings:JwtOptions:Secret" "development-secret-at-least-32-characters"
-# Repeat for ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI
+dotnet user-secrets set "ServiceBusConnectionString" "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key"
+dotnet user-secrets set "ApiSettings:JwtOptions:Secret" "your-secret-at-least-32-characters-long"
+cd ..
 ```
 
-#### 3. Apply Database Migrations
-
+**For ProductAPI:**
 ```bash
-# AuthAPI
-cd E-commerce.Services.AuthAPI
-dotnet ef database update
-
-# ProductAPI
-cd ../E-commerce.Services.ProductAPI
-dotnet ef database update
-
-# CouponAPI
-cd ../E-commerce.Services.CouponAPI
-dotnet ef database update
-
-# ShoppingCartAPI
-cd ../E-commerce.Services.ShoppingCartAPI
-dotnet ef database update
-
-# EmailAPI
-cd ../Ecommerce.Services.EmailAPI
-dotnet ef database update
+cd E-commerce.Services.ProductAPI
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=E-commerce_Product;Trusted_Connection=True;TrustServerCertificate=True"
+cd ..
 ```
+
+**For CouponAPI:**
+```bash
+cd E-commerce.Services.CouponAPI
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=E-commerce_Coupon;Trusted_Connection=True;TrustServerCertificate=True"
+cd ..
+```
+
+**For ShoppingCartAPI:**
+```bash
+cd E-commerce.Services.ShoppingCartAPI
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=E-commerce_ShoppingCart;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "ServiceBusConnectionString" "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key"
+cd ..
+```
+
+**For EmailAPI:**
+```bash
+cd Ecommerce.Services.EmailAPI
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=E-commerce_Email;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "ServiceBusConnectionString" "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=your-key"
+cd ..
+```
+
+#### 3. Apply Database Migrations (Automatic on Startup)
+
+Database migrations are **applied automatically** when each service starts. No manual `dotnet ef database update` needed.
+
+The applications will create the following databases on first run:
+- `E-commerce_Auth`
+- `E-commerce_Product`
+- `E-commerce_Coupon`
+- `E-commerce_ShoppingCart`
+- `E-commerce_Email`
+
+Seed data (sample products, coupons, users) is inserted automatically during migrations.
 
 #### 4. Run Services
 
-**Option A: Visual Studio**
+**Option A: Visual Studio (Recommended)**
 1. Open `E-commerce.sln`
-2. Set multiple startup projects (all 6 services)
-3. Press F5
+2. Right-click Solution → Properties → Multi-startup project
+3. Select **Start** for all 6 projects (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI, Web)
+4. Press **F5** to launch all services simultaneously
+5. Services will start on ports: 7000, 7001, 7002, 7003, 7298, 7230
 
 **Option B: Command Line (6 terminals)**
+Open 6 separate terminal windows and run each service:
+
 ```bash
 # Terminal 1
 cd E-commerce.Services.AuthAPI && dotnet run
@@ -706,9 +715,11 @@ cd Ecommerce.Services.EmailAPI && dotnet run
 cd E-commerce.Web && dotnet run
 ```
 
+Wait for all services to print "Application started." before proceeding to step 5.
+
 **Option C: Docker Compose**
 ```bash
-# Build and start all services
+# From repository root
 docker-compose up -d
 
 # View logs
@@ -718,16 +729,33 @@ docker-compose logs -f
 docker-compose down
 ```
 
-#### 5. Access Application
+#### 5. (Optional) Start Observability Tools
 
-- **Web UI**: https://localhost:7230
-- **Auth API Swagger**: https://localhost:7002/swagger
-- **Product API Swagger**: https://localhost:7000/swagger
-- **Coupon API Swagger**: https://localhost:7001/swagger
-- **Shopping Cart API Swagger**: https://localhost:7003/swagger
-- **Email API Swagger**: https://localhost:7298/swagger
-- **Seq UI (Logs)**: http://localhost:5341
-- **Jaeger UI (Traces)**: http://localhost:16686
+For enhanced debugging and tracing, start Seq and Jaeger:
+
+```bash
+# Start Seq for centralized log aggregation
+docker run -d -e ACCEPT_EULA=Y -p 5341:80 datalust/seq
+
+# Start Jaeger for distributed tracing
+docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
+```
+
+#### 6. Access Application
+
+**Web Application:**
+- **Web UI**: https://localhost:7230 - Main e-commerce application
+
+**API Endpoints (Swagger Documentation):**
+- **Auth API**: https://localhost:7002/swagger
+- **Product API**: https://localhost:7000/swagger
+- **Coupon API**: https://localhost:7001/swagger
+- **Shopping Cart API**: https://localhost:7003/swagger
+- **Email API**: https://localhost:7298/swagger
+
+**Observability Tools (if started in step 5):**
+- **Seq UI (Logs)**: http://localhost:5341 - Search all structured logs
+- **Jaeger UI (Traces)**: http://localhost:16686 - View distributed request traces
 
 ### Testing the Application
 
@@ -1032,13 +1060,6 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ### Production Deployment Metrics
 
-**Deployment Timeline:**
-- **Phase 1** (Security Hardening): ~45 minutes (Completed)
-- **Phase 2** (Containerization): ~1.5 hours (Completed)
-- **Phase 3-Lite** (Health Checks): ~15 minutes (Completed)
-- **Phase 4** (Azure Infrastructure): ~2 hours (Completed)
-- **Total Time:** ~4.5 hours from scratch to production
-
 **Infrastructure Details:**
 - **Docker Images Built:** 6 services (AuthAPI, ProductAPI, CouponAPI, ShoppingCartAPI, EmailAPI, Web)
 - **Image Size:** 220-250 MB per service (optimized multi-stage builds)
@@ -1064,146 +1085,29 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 
 ## Future Enhancements
 
-| Priority | Phase | Enhancement | Description |
-|----------|-------|-------------|-------------|
-| **Completed** | Phase 4 | **OpenTelemetry/Jaeger** | Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
-| **High** | Phase 5 | CI/CD Pipeline | GitHub Actions for automated build and deployment |
-| **High** | Phase 6 | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
-| **High** | Phase 7 | Email Integration | SendGrid/Azure Communication Services for actual email sending |
-| **High** | Phase 8 | Security Hardening | Rate limiting, input validation, security headers, refresh tokens |
-| **Medium** | Phase 9 | API Gateway | NGINX or YARP for centralized routing and rate limiting |
-| **Medium** | Phase 10 | Redis Caching | Product catalog and session caching |
-| **Medium** | Phase 11 | Database Indexing | Composite indexes for frequent queries |
-| **Low** | Phase 12 | Azure Key Vault | Centralized secrets management with Managed Identity |
-| **Low** | Phase 13 | Automated Testing | Unit, integration, and E2E tests with xUnit and Playwright |
-
----
-
-## Phase 4 Implementation Strategy - COMPLETED
-
-### Overview
-
-Phase 4 adds **OpenTelemetry distributed tracing** to visualize request flows across microservices in **Jaeger UI**. The key innovation is centralizing all OpenTelemetry configuration in `E-commerce.Shared`, reducing code duplication across 6 services. **This phase is now complete and deployed.**
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs   │
-│  ├─ AddEcommerceTracing(serviceName)                       │
-│  ├─ Configures: AspNetCore + HttpClient + SqlClient        │
-│  ├─ Exports to: Jaeger (localhost:6831)                    │
-│  └─ Integrates with: CorrelationIdMiddleware (Phase 3)     │
-└─────────────────────────────────────────────────────────────┘
-                           ↑ Used by
-        ┌──────────────────┼──────────────────┐
-        ↓                  ↓                  ↓
-   AuthAPI            ProductAPI         CouponAPI
-        ↓                  ↓                  ↓
-   ┌─────────────────────────────────────────────┐
-   │  All 6 services call:                       │
-   │  builder.Services.AddEcommerceTracing(...)  │
-   │  (Single line of code per service)          │
-   └─────────────────────────────────────────────┘
-        ↓
-   ┌─────────────────────────────────────────────┐
-   │  Jaeger UI (http://localhost:16686)         │
-   │  ├─ Waterfall chart of request flow         │
-   │  ├─ Timing: API → DB → Service Bus → API    │
-   │  ├─ Search by correlation ID                │
-   │  └─ Identify bottlenecks visually           │
-   └─────────────────────────────────────────────┘
-```
-
-### Implementation Checklist - COMPLETED
-
-**Step 1: Update E-commerce.Shared.csproj** (Completed)
-- Added OpenTelemetry packages (1.8.x) for AspNetCore, Http, SqlClient, Jaeger
-
-**Step 2: Create OpenTelemetryExtensions.cs** (Completed)
-- Created centralized `AddEcommerceTracing()` extension method in [E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs](E-commerce.Shared/Extensions/OpenTelemetryExtensions.cs)
-- Configures all instrumentation automatically
-- Exports to Jaeger (configurable via appsettings)
-
-**Step 3: Update appsettings.json in each service** (Completed)
-- All 6 services updated with Jaeger configuration:
-  - AuthAPI (Completed)
-  - ProductAPI (Completed)
-  - CouponAPI (Completed)
-  - ShoppingCartAPI (Completed)
-  - EmailAPI (Completed)
-  - Web MVC (Completed)
-
-**Step 4: Update Program.cs in all 6 services** (Completed)
-- Added `using Ecommerce.Shared.Extensions;` statement
-- Added `builder.Services.AddEcommerceTracing("ServiceName", configuration: builder.Configuration);`
-- All 6 services now participate in distributed tracing
-
-**Step 5: Start Jaeger locally**
-```bash
-docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one
-```
-
-**Step 6: Test with "Cart Checkout" flow** (Completed)
-- Browse Jaeger UI at http://localhost:16686
-- Select service and trace
-- Verify waterfall timing across Web → ShoppingCart → Product → DB
-- Correlation IDs from Phase 3 visible in span tags
-
-### What Gets Traced Automatically
-
-| Component | Traced | Details |
-|-----------|--------|---------|
-| **HTTP Requests** | Enabled | Web MVC → API calls (timing, status codes) |
-| **Database Queries** | Enabled | EF Core → SQL Server (query text, execution time) |
-| **Inter-Service Calls** | Enabled | API → API via HttpClient (latency, payload size) |
-| **Service Bus Messages** | Enabled | Publish/consume timing (queue latency isolated) |
-| **Correlation IDs** | Enabled | Linked to spans via activity tags (from Phase 3) |
-
-### MVP Simplifications (vs Full OpenTelemetry)
-
-| Feature | Included | Why |
-|---------|----------|-----|
-| Auto-instrumentation | Yes | Covers 95% of tracing needs |
-| Jaeger exporter | Yes | Local UI visualization |
-| Service Bus tracing | Yes | Async flow visibility (critical gap in Phase 3) |
-| SQL query text | Yes (Dev only) | Aids debugging without exposing PII |
-| Sampler configuration | ❌ | Not needed for MVP (all requests traced) |
-| Custom Activity Sources | ❌ | Auto-instrumentation sufficient |
-| Multiple exporters | ❌ | Jaeger only (can add later) |
-| Metrics collection | ❌ | Traces only (metrics in future phase) |
-
-### Verification Test: Cart Checkout Waterfall
-
-**User Action:**
-```
-POST /api/cart/EmailCartRequest
-├─ Correlation ID: 96ebdbee-45fa-4264-a1b8-c1be5759f40d
-├─ Auth Check (5ms)
-├─ ProductAPI Call (20ms)
-├─ CouponAPI Call (10ms)
-├─ Service Bus Publish (50ms)
-└─ EmailAPI Consume (200ms + DB write)
-Total: ~285ms
-```
-
-**In Jaeger UI:**
-- All steps appear as nested spans
-- Each color represents different instrumentation (red=SQL, green=HTTP, blue=messaging)
-- Hover to see exact timings
-- Click to see span tags (correlation_id, product_id, etc.)
+| Priority | Enhancement | Description |
+|----------|-------------|-------------|
+| **Completed** | **OpenTelemetry/Jaeger** | Centralized config in E-commerce.Shared, distributed tracing with timing analysis, Jaeger waterfall visualization |
+| **High** | CI/CD Pipeline | GitHub Actions for automated build and deployment |
+| **High** | Polly Resilience | Retry, circuit breaker, timeout policies for HTTP calls |
+| **High** | Email Integration | SendGrid/Azure Communication Services for actual email sending |
+| **High** | Security Hardening | Rate limiting, input validation, security headers, refresh tokens |
+| **High** | Playwright Testing Suite | End-to-end regression testing with Playwright for UI workflows, plus unit and integration tests with xUnit |
+| **High** | WebSocket Real-Time Updates | SignalR integration for real-time cart sync, live inventory updates, and order status notifications across multiple user sessions |
+| **Medium** | Redis Caching | Product catalog and session caching for improved performance |
+| **Medium** | Database Indexing | Composite indexes for frequent queries on Products, Coupons, and Cart tables |
+| **Medium** | Cloudflare Workers | Edge computing integration for API caching, geographic routing, and serverless middleware functions |
+| **Medium** | Admin & Monitoring Dashboards | Admin panel for product/order management, Grafana-based monitoring dashboard for service health, and customer account dashboard |
+| **Medium** | Insomnia API Collection | Pre-configured Insomnia collection for API testing and developer onboarding |
+| **Medium** | Multi-Tab Synchronization | Browser tab state synchronization using BroadcastChannel API for seamless shopping across multiple tabs |
+| **Low** | Azure Key Vault | Centralized secrets management with Managed Identity for production environments |
 
 ---
 
 ## Additional Resources
 
 ### Project Documentation
-- [DEPLOYMENT-PLAN.md](Docs/DEPLOYMENT-PLAN.md) - Complete 7-phase deployment strategy
-- [PUSH-TO-PRODUCTION.md](Docs/PUSH-TO-PRODUCTION.md) - Quick Azure deployment guide
-- [PHASE4-PROGRESS.md](Docs/PHASE4-PROGRESS.md) - Deployment progress tracker
-- [BUILD_AND_DEPLOY.md](BUILD_AND_DEPLOY.md) - Docker build and ACR push instructions
 - [CLAUDE.md](CLAUDE.md) - AI assistant context & detailed architecture documentation
-- [OBSERVABILITY-IMPLEMENTATION-GUIDE.md](OBSERVABILITY-IMPLEMENTATION-GUIDE.md) - Serilog & distributed tracing setup
 
 ### Production Scripts
 - [scripts/Prod/build-docker-images.ps1](scripts/Prod/build-docker-images.ps1) - Build all Docker images
@@ -1245,12 +1149,6 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 
 **Last Updated**: 2025-12-24
 **Version**: 1.0.4 (with E-commerce.Shared observability library)
-**Branch**: `master` (Phases 3-4 merged from feature branches)
-**Status**: Deployed to Azure Container Apps (Production) | Phase 4 OpenTelemetry/Jaeger Implementation Complete
+**Branch**: `master`
+**Status**: Deployed to Azure Container Apps (Production)
 **Live URL**: https://web.mangosea-a7508352.eastus.azurecontainerapps.io
-
-### Completed Phases
-- Phase 1: Security Hardening
-- Phase 2: Containerization
-- Phase 3: Correlation ID Middleware & Structured Logging (Serilog)
-- Phase 4: OpenTelemetry/Jaeger Distributed Tracing (Centralized in E-commerce.Shared)
