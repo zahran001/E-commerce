@@ -954,7 +954,7 @@ authapi:
 
 ### Push to Azure Container Registry
 
-See [BUILD_AND_DEPLOY.md](BUILD_AND_DEPLOY.md) for complete Azure deployment instructions.
+See [BUILD_AND_DEPLOY.md](BUILD_AND_DEPLOY.md) for complete Docker build and ACR push instructions.
 
 ---
 
@@ -962,7 +962,7 @@ See [BUILD_AND_DEPLOY.md](BUILD_AND_DEPLOY.md) for complete Azure deployment ins
 
 ### Quick Deployment Guide
 
-Full deployment instructions available in [PUSH-TO-PRODUCTION.md](PUSH-TO-PRODUCTION.md).
+Full deployment instructions available in [PUSH-TO-PRODUCTION.md](Docs/PUSH-TO-PRODUCTION.md).
 
 **Summary:**
 1. **Infrastructure Setup** (20 min): Create Azure resources (SQL Server, Service Bus, Container Registry, Container Apps Environment)
@@ -1148,6 +1148,7 @@ GitHub: [github.com/zahran001](https://github.com/zahran001)
 
 - Built with guidance from Microsoft's [eShopOnContainers](https://github.com/dotnet-architecture/eShopOnContainers) reference architecture
 - Inspired by microservices patterns from [microservices.io](https://microservices.io/)
+- Started learning with [bhrugen/MagicVilla_API](https://github.com/bhrugen/MagicVilla_API)
 
 ---
 
