@@ -568,10 +568,10 @@ ApiSettings__Audience=e-commerce-client
 
 | Resource | SKU/Tier | Monthly Cost |
 |----------|----------|--------------|
-| **Azure Container Apps** | Consumption (6 apps) | ~$3 |
-| **Azure SQL Database** | Serverless (5 databases, auto-pause) | ~$4 |
+| **Azure Container Apps** | Consumption (6 apps) | ~$5 |
+| **Azure SQL Database** | Serverless (5 databases, auto-pause) | ~$1 |
 | **Azure Service Bus** | Basic (2 queues) | ~$1 |
-| **Azure Container Registry** | Basic | ~$1 |
+| **Azure Container Registry** | Basic | ~$2 |
 | **SSL Certificate** | Managed (included) | $0 |
 | **Total** | | **~$9/month** |
 
@@ -1057,6 +1057,10 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
    │  • web:1.0.1                            │
    └─────────────────────────────────────────┘
 ```
+
+### Logging and Tracing
+<img width="5760" height="2160" alt="Screenshot (431)" src="https://github.com/user-attachments/assets/a5002d00-49dc-4de7-9a1b-6a2ddf294a35" />
+<img width="5760" height="2160" alt="Screenshot (430)" src="https://github.com/user-attachments/assets/0af0150b-f8c5-4506-aff7-42784821dc30" />
 
 ### Production Deployment Metrics
 
