@@ -1062,6 +1062,13 @@ View complete deployment history in [Docs/PHASE4-PROGRESS.md](Docs/PHASE4-PROGRE
 <img width="5760" height="2160" alt="Screenshot (431)" src="https://github.com/user-attachments/assets/a5002d00-49dc-4de7-9a1b-6a2ddf294a35" />
 <img width="5760" height="2160" alt="Screenshot (430)" src="https://github.com/user-attachments/assets/0af0150b-f8c5-4506-aff7-42784821dc30" />
 
+### Redis
+**Before**
+<img width="2880" height="1080" alt="Screenshot (442)" src="https://github.com/user-attachments/assets/c2b6730d-f34c-48cc-82f5-07d788161201" />
+
+**After**
+<img width="2880" height="1080" alt="Screenshot (443)" src="https://github.com/user-attachments/assets/d5e56651-099f-42a2-87d9-eb50d4ecc8c3" />
+
 ### Production Deployment Metrics
 
 **Infrastructure Details:**
