@@ -1,7 +1,5 @@
-﻿using AutoMapper;
-using E_commerce.Services.ProductAPI.Models;
-using E_commerce.Services.ProductAPI.Data;
-using E_commerce.Services.ProductAPI.Models.Dto;
+﻿using E_commerce.Services.ProductAPI.Models.Dto;
+using E_commerce.Services.ProductAPI.Service.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,69 +9,73 @@ namespace E_commerce.Services.ProductAPI.Controllers
     [ApiController]
     public class ProductAPIController : ControllerBase
     {
-        // retrieve all Products
-        // In order to retrieve the records, we will be using EF Core, so we need ApplicationDbContext using DI.
-        private readonly ApplicationDbContext _db;
-        // return ResponseDto in the controller
-        private ResponseDto _response;
-        // inject AutoMapper in the controller
-        private IMapper _mapper;
-        // inject ILogger
+        private readonly IProductService _productService;
         private readonly ILogger<ProductAPIController> _logger;
+        protected ResponseDto _response;
 
-
-
-        // Constructor
-        public ProductAPIController(ApplicationDbContext db, IMapper mapper, ILogger<ProductAPIController> logger)
+        public ProductAPIController(
+            IProductService productService,
+            ILogger<ProductAPIController> logger)
         {
-            _db = db;
-            _response = new ResponseDto();
-            _mapper = mapper;
+            _productService = productService;
             _logger = logger;
+            _response = new ResponseDto();
         }
 
         // get all Products
         [HttpGet]
-        public ResponseDto Get()
+        public async Task<ActionResult<ResponseDto>> GetAll()
         {
-            _logger.LogInformation("Fetching all products");
-
             try
             {
-                IEnumerable<Product> objList = _db.Products.ToList();
-                _response.Result = _mapper.Map<IEnumerable<ProductDto>>(objList);
-                _logger.LogInformation("Successfully retrieved {Count} products", objList.Count());
+                _logger.LogInformation("Fetching all products");
+                var products = await _productService.GetAllProductsAsync();
+
+                _response.Result = products;
+                _response.IsSuccess = true;
+                _response.Message = $"Retrieved {products.Count} products";
+
+                return Ok(_response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching all products");
                 _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                _response.Message = "Error retrieving products";
+                return BadRequest(_response);
             }
-            // return back the response
-            return _response;
         }
 
 		// get Product by id
 		[HttpGet]
         [Route("{id:int}")]
-        public ResponseDto Get(int id)
+        public async Task<ActionResult<ResponseDto>> GetById([FromRoute] int id)
         {
-            _logger.LogInformation("Fetching product with ID {ProductId}", id);
-
             try
             {
-                Product obj = _db.Products.First(u => u.ProductId == id);
-                _response.Result = _mapper.Map<ProductDto>(obj);
-                _logger.LogInformation("Successfully retrieved product {ProductId}", id);
+                _logger.LogInformation("Fetching product with ID: {ProductId}", id);
+                var product = await _productService.GetProductByIdAsync(id);
+
+                if (product == null)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "Product not found";
+                    return NotFound(_response);
+                }
+
+                _response.Result = product;
+                _response.IsSuccess = true;
+                _response.Message = "Product retrieved successfully";
+
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching product {ProductId}", id);
+                _logger.LogError(ex, "Error fetching product with ID: {ProductId}", id);
                 _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                _response.Message = "Error retrieving product";
+                return BadRequest(_response);
             }
-            return _response;
         }
 
 
@@ -81,92 +83,89 @@ namespace E_commerce.Services.ProductAPI.Controllers
 		// create a new Product
 		[HttpPost]
         [Authorize(Roles = "ADMIN")]
-        public ResponseDto Post([FromBody] ProductDto ProductDto)
+        public async Task<ActionResult<ResponseDto>> Post([FromBody] ProductDto productDto)
         {
-            _logger.LogInformation("Creating new product: {ProductName}", ProductDto.Name);
-
-            // convert ProductDto to Product to add to _db (database)
-
             try
             {
-                // DestinationType destinationObject = _mapper.Map<DestinationType>(sourceObject);
-                Product obj = _mapper.Map<Product>(ProductDto);
-                _db.Products.Add(obj);
-                _db.SaveChanges();
+                _logger.LogInformation("Creating new product: {ProductName}", productDto.Name);
+                var createdProduct = await _productService.CreateProductAsync(productDto);
 
-                // return the ProductDto
-                _response.Result = _mapper.Map<ProductDto>(obj);
-                _logger.LogInformation("Product created successfully with ID {ProductId}", obj.ProductId);
+                _response.Result = createdProduct;
+                _response.IsSuccess = true;
+                _response.Message = "Product created successfully";
+
+                return CreatedAtAction(nameof(GetById), new { id = createdProduct.ProductId }, _response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating product {ProductName}", ProductDto.Name);
+                _logger.LogError(ex, "Error creating product");
                 _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                _response.Message = "Error creating product";
+                return BadRequest(_response);
             }
-            return _response;
         }
  
         // update a Product
         [HttpPut]
 		[Authorize(Roles = "ADMIN")]
-		public ResponseDto Put([FromBody] ProductDto ProductDto)
+		public async Task<ActionResult<ResponseDto>> Put([FromBody] ProductDto productDto)
         {
-            _logger.LogInformation("Updating product {ProductId}: {ProductName}", ProductDto.ProductId, ProductDto.Name);
-
-            // convert ProductDto to Product to add to _db (database)
-
             try
             {
-                // DestinationType destinationObject = _mapper.Map<DestinationType>(sourceObject);
-                Product obj = _mapper.Map<Product>(ProductDto);
-                _db.Products.Update(obj); // EF Core - based on the id the obj, it will update the record
-                _db.SaveChanges();
+                _logger.LogInformation("Updating product with ID: {ProductId}", productDto.ProductId);
+                var success = await _productService.UpdateProductAsync(productDto);
 
-                // return the ProductDto
-                _response.Result = _mapper.Map<ProductDto>(obj);
-                _logger.LogInformation("Product {ProductId} updated successfully", ProductDto.ProductId);
+                if (!success)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "Product not found";
+                    return NotFound(_response);
+                }
+
+                _response.IsSuccess = true;
+                _response.Message = "Product updated successfully";
+
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating product {ProductId}", ProductDto.ProductId);
+                _logger.LogError(ex, "Error updating product with ID: {ProductId}", productDto.ProductId);
                 _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                _response.Message = "Error updating product";
+                return BadRequest(_response);
             }
-            return _response;
         }
 
 
         // delete a Product
-        [HttpDelete]
-        [Route("{id:int}")]
+        [HttpDelete("{id:int}")]
 		[Authorize(Roles = "ADMIN")]
-		public ResponseDto Delete(int id)
+		public async Task<ActionResult<ResponseDto>> Delete([FromRoute] int id)
         {
-            _logger.LogInformation("Deleting product {ProductId}", id);
-
             try
             {
-                // retrieve that Product
-                Product obj = _db.Products.First(u=>u.ProductId == id);
-                _db.Products.Remove(obj) ;
-                _db.SaveChanges();
-                _logger.LogInformation("Product {ProductId} deleted successfully", id);
+                _logger.LogInformation("Deleting product with ID: {ProductId}", id);
+                var success = await _productService.DeleteProductAsync(id);
+
+                if (!success)
+                {
+                    _response.IsSuccess = false;
+                    _response.Message = "Product not found";
+                    return NotFound(_response);
+                }
+
+                _response.IsSuccess = true;
+                _response.Message = "Product deleted successfully";
+
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting product {ProductId}", id);
+                _logger.LogError(ex, "Error deleting product with ID: {ProductId}", id);
                 _response.IsSuccess = false;
-                _response.Message = ex.Message;
+                _response.Message = "Error deleting product";
+                return BadRequest(_response);
             }
-            return _response;
         }
-        // Passing the ID in the URL
-
     }
 }
-// Architecture for the API response: Whenever multiple APIs are being consumed, the response will be in one object format.
-// We want to have a common response for all the endpoints.
-
-// We have added dtos in the project. We should not return Product or the data object itself - we should return the dto.
-// To avoid a manual conversion - we can use AutoMapper for this.

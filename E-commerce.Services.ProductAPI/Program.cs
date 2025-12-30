@@ -1,6 +1,9 @@
 using AutoMapper;
 using E_commerce.Services.ProductAPI;
+using E_commerce.Services.ProductAPI.Configuration;
 using E_commerce.Services.ProductAPI.Data;
+using E_commerce.Services.ProductAPI.Service;
+using E_commerce.Services.ProductAPI.Service.IService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,6 +35,24 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
 	option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Register cache configuration
+builder.Services.Configure<CacheSettings>(
+	builder.Configuration.GetSection("CacheSettings"));
+
+// Register Redis distributed cache
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+	var cacheSettings = builder.Configuration.GetSection("CacheSettings").Get<CacheSettings>();
+	options.Configuration = cacheSettings?.RedisConnection ?? "localhost:6379";
+	options.InstanceName = "ecommerce_product_";
+});
+
+// Register cache service
+builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
+
+// Register product service (replaces direct DbContext usage)
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // create a mapper
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
