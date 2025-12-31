@@ -222,9 +222,14 @@ az containerapp logs show --name redis --resource-group Ecommerce-Project --tail
 ```
 
 **Solution**:
-- Redis may be scaled to zero (first request wakes it up)
+- **Important**: Set Redis `minReplicas=1` to keep it always running:
+  ```powershell
+  az containerapp update --name redis --resource-group Ecommerce-Project --min-replicas 1
+  ```
+- Redis may be scaled to zero (first request wakes it up) - this causes 30-60 second delay on first use
 - Verify environment variable: `CacheSettings__RedisConnection=redis:6379`
 - Check all services are in same Container Apps environment
+- If Redis is scale-to-zero, ProductAPI requests will timeout waiting for it to start
 
 ### Seq Not Receiving Logs
 
@@ -263,6 +268,29 @@ Invoke-RestMethod -Uri "$jaegerUrl/api/services" -Method GET
 - Verify environment variables: `Jaeger__AgentHost=jaeger`, `Jaeger__AgentPort=6831`
 - Ensure OpenTelemetry is enabled via `AddEcommerceTracing()` in Program.cs
 - Generate some API traffic to create spans
+
+### Jaeger OTLP Not Receiving Traces
+
+**Symptom**: Using `OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317` but traces don't appear in Jaeger UI
+
+**Diagnosis**:
+```powershell
+# Verify OTLP endpoint is set on each service
+az containerapp show --name authapi --resource-group Ecommerce-Project --query "properties.template.containers[0].env[?name=='OTEL_EXPORTER_OTLP_ENDPOINT'].value"
+
+# Check Jaeger ingress port mappings
+az containerapp ingress show --name jaeger --resource-group Ecommerce-Project --query "exposedPort"
+
+# Check Jaeger logs for connection attempts
+az containerapp logs show --name jaeger --resource-group Ecommerce-Project --tail 100 | Select-String "4317"
+```
+
+**Solution**:
+- **Verify port mappings**: Ensure Jaeger container app has ingress ports 4317 and 4318 exposed (Add these to Ingress settings → Additional Port Mappings)
+- **Verify environment variable**: All 6 microservices need `OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317`
+- **Check service discovery**: Apps reference `jaeger:4317` (internal hostname, not IP)
+- **Wait for Jaeger startup**: Jaeger may be scale-to-zero; first OTLP request wakes it up (30-60 second delay)
+- **Verify OpenTelemetry SDK**: Ensure C# apps have OpenTelemetry SDK configured with OTLP exporter (not just Jaeger agent SDK)
 
 ### Seq Data Loss After Container Restart
 
@@ -326,6 +354,23 @@ Serilog__WriteTo__2__Args__serverUrl=http://seq:80
 Jaeger__AgentHost=jaeger
 Jaeger__AgentPort=6831
 ```
+
+### OTLP Endpoint Configuration (OpenTelemetry)
+
+**For C# apps using OpenTelemetry SDK with OTLP exporter** (all 6 microservices):
+
+Add this environment variable to each container app:
+```
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+```
+
+**Note:** This uses gRPC protocol (port 4317) for better performance. Make sure to also configure ingress port mappings on Jaeger container app:
+```
+Port: 4317 | Exposed Port: 4317
+Port: 4318 | Exposed Port: 4318
+```
+
+This allows apps to send telemetry data to Jaeger's OTLP receivers. If these ports aren't exposed, traces won't be received by Jaeger.
 
 ### Service Configuration (No Changes Required)
 
