@@ -32,7 +32,7 @@ A **production-ready**, **cloud-native** e-commerce platform built with microser
 
 **Live Status:**
 - **Deployed:** Azure Container Apps (East US), 100% uptime since launch
-- **Cost:** ~$21/month (Phase 4: $9 core, Phase 5: $12 observability)
+- **Cost:** ~$21/month (microservices: $9, observability: $12)
 - **URL:** [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
 **Key Achievements:**
@@ -127,14 +127,14 @@ This full-stack e-commerce application showcases enterprise-grade architectural 
 ## Key Features & Technical Achievements
 
 ### Deployment Achievements
-- **Production Deployment Complete**: Successfully deployed 6 microservices to Azure Container Apps (November 2025)
-- **Observability Stack Deployed**: Redis, Seq, and Jaeger on Container Apps for full observability (December 2025)
+- **Production Deployment Complete**: Successfully deployed 6 microservices to Azure Container Apps
+- **Full Observability Stack**: Redis, Seq, and Jaeger on Container Apps for caching, logging, and tracing
 - **All Services Running**: 100% uptime since deployment with health checks monitoring all containers
 - **Zero-Downtime Deployments**: Container Apps configured for rolling updates without service interruption
-- **Caching Layer Active**: Redis cache enabled for ProductAPI, delivering 70-80% faster catalog queries
+- **Caching Layer Active**: Redis cache enabled for ProductAPI, delivering ~95% latency reduction
 - **Centralized Logging**: Seq aggregating structured logs from all 6 services with full-text search
 - **Distributed Tracing**: Jaeger visualizing request flows across microservices with latency analysis
-- **Cost-Optimized Infrastructure**: Running on ~$21/month total (Phase 4: ~$9, Phase 5 Observability: ~$12)
+- **Cost-Optimized Infrastructure**: Running on ~$21/month total (microservices: ~$9, observability: ~$12)
 - **Automated Database Migrations**: Pre-deployed EF Core migrations to 5 Azure SQL databases with seed data
 - **Message Queue Integration**: Service Bus successfully processing user registration and cart email notifications
 - **Public HTTPS Endpoint**: Web application accessible at [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
@@ -604,7 +604,7 @@ ApiSettings__Audience=e-commerce-client
 
 ### Monthly Azure Costs (Production)
 
-#### Phase 4: Core Infrastructure (~$9/month)
+#### Microservices & Infrastructure (~$9/month)
 | Resource | SKU/Tier | Monthly Cost |
 |----------|----------|--------------|
 | **Azure Container Apps** (6 microservices) | Consumption | ~$5 |
@@ -612,9 +612,9 @@ ApiSettings__Audience=e-commerce-client
 | **Azure Service Bus** | Basic (2 queues) | ~$1 |
 | **Azure Container Registry** | Basic | ~$2 |
 | **SSL Certificate** | Managed (included) | $0 |
-| **Phase 4 Subtotal** | | **~$9/month** |
+| **Subtotal** | | **~$9/month** |
 
-#### Phase 5: Observability Stack (~$12/month)
+#### Observability Stack (~$12/month)
 | Resource | SKU/Tier | Monthly Cost |
 |----------|----------|--------------|
 | **Redis Cache** | Container Apps (0.25 vCPU, scale-to-zero) | ~$2 |
@@ -622,13 +622,13 @@ ApiSettings__Audience=e-commerce-client
 | **Jaeger Tracing** | Container Apps (0.25 vCPU, scale-to-zero) | ~$1 |
 | **Azure Files** (32GB quota, Seq storage) | Standard tier | ~$1.50 |
 | **Storage Account** | General Purpose v2 | ~$0.50 |
-| **Phase 5 Subtotal** | | **~$12/month** |
+| **Subtotal** | | **~$12/month** |
 
 #### Total Monthly Cost
-| Phase | Cost |
-|-------|------|
-| **Phase 4 (Core Services)** | ~$9 |
-| **Phase 5 (Observability)** | ~$12 |
+| Category | Cost |
+|----------|------|
+| **Microservices & Infrastructure** | ~$9 |
+| **Observability Stack** | ~$12 |
 | **TOTAL** | **~$21/month** |
 
 ### Cost Optimization Strategies
