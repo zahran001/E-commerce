@@ -8,8 +8,11 @@ Deploy Redis, Seq, and Jaeger as Container Apps within the existing `ecommerce-e
 - **Storage Account Key:** [Key1 from storage account access keys]
 - **File Share Name:** `seq-data`
 - **Volume Mount Name:** `seq-storage`
+- **Seq Active Revision:** `seq--0000007` (latest stable, minReplicas=1, runs 24/7)
 - **Resource Group:** `Ecommerce-Project`
 - **Region:** `eastus`
+
+**Note on Seq Revisions:** Seq may create multiple revisions during deployment/updates. If a new revision fails (e.g., file lock errors on `stream.flare`), you can revert to the last known-good revision using `az containerapp revision activate --name seq --revision seq--0000007`. Always verify all revisions are active (not stopped) before troubleshooting further.
 
 ## Overview
 
