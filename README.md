@@ -46,6 +46,10 @@ A **production-ready**, **cloud-native** e-commerce platform built with microser
 
 ---
 
+## Azure Resource Visualizer
+
+<img width="23408" height="2909" alt="Ecommerce-Project (1)" src="https://github.com/user-attachments/assets/bbf236b7-70db-4c93-a92d-87e8b271f59e" />
+
 ## Project Overview
 
 This full-stack e-commerce application showcases enterprise-grade architectural patterns including **microservices**, **event-driven design**, **containerization**, and **cloud-native deployment**. Built to demonstrate proficiency in distributed systems, API design, and modern DevOps practices.
