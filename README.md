@@ -1143,6 +1143,9 @@ View complete deployment history:
 **After**
 <img width="2880" height="1080" alt="Screenshot (443)" src="https://github.com/user-attachments/assets/d5e56651-099f-42a2-87d9-eb50d4ecc8c3" />
 
+### Whole Stack
+<img width="5760" height="2160" alt="Screenshot (444)" src="https://github.com/user-attachments/assets/5e088832-f25a-464b-ad8e-6f2b9aa0e690" />
+
 ### Production Deployment Metrics
 
 **Infrastructure Details:**
