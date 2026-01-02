@@ -1069,14 +1069,14 @@ View complete deployment history:
                           [Azure Container Apps - East US]
                                        ↓
                     ┌──────────────────────────────────────┐
-                    │  Web MVC (External Ingress)         │
-                    │  web.mangosea-a7508352.eastus...    │
+                    │  Web MVC (External Ingress)          │
+                    │  web.mangosea-a7508352.eastus...     │
                     │  HTTPS with managed SSL              │
                     └──────────────┬───────────────────────┘
                                    │
                     Internal Service Mesh (DNS-based)
                                    │
-        ┌──────────────┬──────────┼──────────┬──────────────┐
+        ┌──────────────┬──────────┼──────────-┬──────────────┐
         ↓              ↓           ↓          ↓              ↓
    ┌────────┐    ┌────────┐  ┌────────┐  ┌──────────┐  ┌────────┐
    │ AuthAPI│    │Product │  │ Coupon │  │Shopping  │  │ Email  │
@@ -1086,8 +1086,8 @@ View complete deployment history:
         │             │           │             │            │
         ↓             ↓           ↓             ↓            ↓
    ┌────────────────────────────────────────────────────────────┐
-   │           Azure SQL Server (Serverless Gen5)               │
-   │  ecommerce-sql-server-prod.database.windows.net           │
+   │           Azure SQL Server (Serverless)                    │
+   │  ecommerce-sql-server-prod.database.windows.net            │
    ├────────────────────────────────────────────────────────────┤
    │ • ecommerce-auth (Identity tables)                         │
    │ • ecommerce-product (Products)                             │
@@ -1097,27 +1097,27 @@ View complete deployment history:
    └────────────────────────────────────────────────────────────┘
 
    ┌─────────────────────────────────────────────────────┐
-   │  OBSERVABILITY STACK (Phase 5)                      │
+   │                OBSERVABILITY STACK                  │
    ├─────────────────────────────────────────────────────┤
-   │  ┌──────────┐  ┌────────┐  ┌──────────┐           │
-   │  │  Redis   │  │  Seq   │  │  Jaeger  │           │
-   │  │ Caching  │  │Logging │  │ Tracing  │           │
-   │  └──────────┘  └────────┘  └──────────┘           │
-   │                    ↓                               │
-   │           [Azure Files: 32GB]                      │
+   │  ┌──────────┐  ┌────────┐  ┌──────────┐             │
+   │  │  Redis   │  │  Seq   │  │  Jaeger  │             │
+   │  │ Caching  │  │Logging │  │ Tracing  │             │
+   │  └──────────┘  └────────┘  └──────────┘             │
+   │                    ↓                                │
+   │           [Azure Files: 32GB]                       │
    └─────────────────────────────────────────────────────┘
 
         ┌────────────────────────────────────┐
-        │  Azure Service Bus (Basic SKU)    │
-        │  ecommerceweb.servicebus.net      │
+        │         Azure Service Bus          │
+        │  ecommerceweb.servicebus.net       │
         ├────────────────────────────────────┤
         │  Queue: loguser                    │ ← AuthAPI → EmailAPI
         │  Queue: emailshoppingcart          │ ← CartAPI → EmailAPI
         └────────────────────────────────────┘
 
    ┌─────────────────────────────────────────┐
-   │  Azure Container Registry               │
-   │  ecommerceacr.azurecr.io               │
+   │        Azure Container Registry         │
+   │  ecommerceacr.azurecr.io                │
    ├─────────────────────────────────────────┤
    │  • authapi:1.0.1                        │
    │  • productapi:1.0.1                     │
