@@ -7,10 +7,12 @@ A **production-ready**, **cloud-native** e-commerce platform built with microser
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)](https://www.docker.com/)
 [![Deployment](https://img.shields.io/badge/Deployment-Live%20on%20Azure-success)](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
-> **LIVE DEPLOYMENT:** This application is currently running in production on Azure Container Apps.
+> **DEPLOYMENT:** This application was deployed in production on Azure Container Apps.
 >
-> **Live Demo:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
+> **Demo:** [https://web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 >
+> The deployment is scheduled to be deactivated to reallocate cloud resources to my ongoing [Design-MCP](https://github.com/zahran001/Design-MCP) project.
+> 
 > **Production Status:** 6 microservices running | 5 SQL databases deployed | Observability stack (Redis, Seq, Jaeger) | ~$21/month
 
 ---
