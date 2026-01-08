@@ -42,7 +42,8 @@ A **production-ready**, **cloud-native** e-commerce platform built with microser
 - Redis layer delivering ~95% latency reduction on catalog queries
 - Automated EF Core migrations, zero-downtime deployments, health check monitoring
 
-**Project Highlights:** This project demonstrates my proficiency in distributed systems, cloud architecture, containerization, observability patterns, and production deployment at scale—all on a lean $21/month infrastructure budget. The Azure deployment will be deactivated to prioritize resources for my other project [Design-MCP](https://github.com/zahran001/Design-MCP); all code and deployment automation remain fully documented and reproducible.
+### Project Highlights:
+This project demonstrates my proficiency in distributed systems, cloud architecture, containerization, observability patterns, and production deployment at scale—all on a lean $21/month infrastructure budget. The platform was deployed on Azure and will be deactivated to reallocate resources to my ongoing [Design-MCP](https://github.com/zahran001/Design-MCP) project. All infrastructure, CI/CD pipelines, and deployment automation remain fully documented and reproducible.
 
 ---
 
