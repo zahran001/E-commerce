@@ -5,7 +5,7 @@ A cloud-native e-commerce platform built with ASP.NET Core 8.0 microservices, de
 [![.NET](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
 [![Azure](https://img.shields.io/badge/Azure-Container%20Apps-blue)](https://azure.microsoft.com/services/container-apps/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED)](https://www.docker.com/)
-[![Deployment](https://img.shields.io/badge/Deployment-Live%20on%20Azure-success)](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
+[![Deployment](https://img.shields.io/badge/Deployment-Azure-success)](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 
 > **Demo:** [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 >
@@ -191,12 +191,6 @@ Databases are created and seeded automatically on first startup.
 | [Cost Analysis](Docs/COST-ANALYSIS.md) | Azure cost breakdown (~$21/month) |
 | [CLAUDE.md](CLAUDE.md) | AI assistant context & detailed architecture |
 | [Deployment Plan](Docs/PUSH-TO-PRODUCTION.md) | Step-by-step production deployment |
-
----
-
-## Author
-
-**Zahran** - [github.com/zahran001](https://github.com/zahran001)
 
 ---
 
