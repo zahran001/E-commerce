@@ -10,8 +10,9 @@ A cloud-native e-commerce platform built with ASP.NET Core 8.0 microservices, de
 > **Demo:** [web.mangosea-a7508352.eastus.azurecontainerapps.io](https://web.mangosea-a7508352.eastus.azurecontainerapps.io)
 >
 > 6 microservices | 5 SQL databases | Redis + Seq + Jaeger observability | ~$21/month
->
-> The deployment is scheduled to be deactivated to reallocate cloud resources to my ongoing [Design-MCP](https://github.com/zahran001/Design-MCP) project. All code and deployment automation remain fully documented and reproducible.
+
+> [!WARNING]
+> The live deployment has been deactivated to reallocate cloud resources to my ongoing [Design-MCP](https://github.com/zahran001/Design-MCP) project. All code and deployment automation remain fully documented and reproducible.
 
 ---
 
@@ -144,7 +145,7 @@ Databases are created and seeded automatically on first startup.
 
 ---
 
-## Screenshots
+## References
 
 ### Logging and Tracing (Seq + Jaeger)
 <img width="5760" height="2160" alt="Seq structured logging" src="https://github.com/user-attachments/assets/a5002d00-49dc-4de7-9a1b-6a2ddf294a35" />
